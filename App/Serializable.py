@@ -25,9 +25,6 @@ def serializable(cls):
             The object's variables are converted to JSON format and saved into a file.
             The file is created or overwritten with the serialized data, including the header text.
             """
-
-            file_path = path.join(self.path, FILE_NAME)
-
             data = {}
             for key, value in self.__dict__.items():
                 if key.startswith(NON_SERIALIZABLE_PREFIX):
@@ -36,9 +33,14 @@ def serializable(cls):
                 if isinstance(value, (date, time)):
                     value = value.isoformat()
 
+                if isinstance(value, set):
+                    value = list(value)
+
                 data[key] = value
 
             json_string = json.dumps(data, indent=4)
+
+            file_path = path.join(self.path, FILE_NAME)
             with open(file_path, "w") as file:
                 file.write(f"{FILE_HEADER}{FILE_DATA_BULLET}{json_string}")
 
@@ -83,6 +85,10 @@ def serializable(cls):
 
                     elif isinstance(type_matrix[value], set):
                         data[key] = set(value)
+
+                    elif isinstance(type_matrix[value, tuple]):
+                        data[key] = tuple(value)
+
                 return data
 
             obj = cls()
