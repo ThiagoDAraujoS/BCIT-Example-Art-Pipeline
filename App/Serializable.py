@@ -4,6 +4,7 @@ from os import path
 FILE_NAME: str = "data.meta"
 FILE_HEADER: str = "FILE CREATED BY: THIAGO dA. SILVA\nBCIT - Britsh Columbia Institute of Technology\nTechnical Arts Advanced Course\n"
 FILE_DATA_BULLET: str = "DATA>>>\n"
+NON_SERIALIZABLE_PREFIX: str = "_"
 
 def serializable(cls):
     """
@@ -29,6 +30,9 @@ def serializable(cls):
 
             data = {}
             for key, value in self.__dict__.items():
+                if key.startswith(NON_SERIALIZABLE_PREFIX):
+                    continue
+
                 if isinstance(value, (date, time)):
                     value = value.isoformat()
 
