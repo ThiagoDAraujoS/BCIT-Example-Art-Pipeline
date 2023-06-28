@@ -61,23 +61,36 @@ def serializable(cls):
             - json.JSONDecodeError: If the serialized JSON data is not valid.
             """
 
-            file_path = path.join(folder_path, FILE_NAME)
+            def read_json_from_file():
+                """ This method reads the contents of the file, then return a dictionary with its contents """
+                file_path = path.join(folder_path, FILE_NAME)
+                with open(file_path, "r") as file:
+                    file_string = file.read()
 
-            with open(file_path, "r") as file:
-                file_string = file.read()
+                json_string = file_string.split(FILE_DATA_BULLET)[-1]
 
-            json_string = file_string.split(FILE_DATA_BULLET)[-1]
+                return json.loads(json_string)
 
-            data = json.loads(json_string)
-            for key, value in data.items():
-                try: data[key] = date.fromisoformat(value)
-                except ValueError: pass
+            def fix_mistypes(obj, data):
+                """ This method uses the cls to find the real types of the data stored in the file, then fixes the mistyped variables """
+                type_matrix = obj.__dict__
+                for key, value in data.items():
+                    if isinstance(type_matrix[value], time):
+                        data[key] = time.fromisoformat(value)
 
-                try: data[key] = time.fromisoformat(value)
-                except ValueError: pass
+                    elif isinstance(type_matrix[value], date):
+                        data[key] = date.fromisoformat(value)
+
+                    elif isinstance(type_matrix[value], set):
+                        data[key] = set(value)
+                return data
 
             obj = cls()
             obj.path = folder_path
+
+            data = read_json_from_file()
+            data = fix_mistypes(obj, data)
+
             obj.__dict__.update(data)
             return obj
 
