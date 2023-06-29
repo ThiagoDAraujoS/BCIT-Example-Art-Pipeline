@@ -76,20 +76,27 @@ def serializable(cls):
             def fix_mistypes(obj, data):
                 """ This method uses the cls to find the real types of the data stored in the file, then fixes the mistyped variables """
                 type_matrix = obj.__dict__
+                result_data = {}
                 for key, value in data.items():
-                    if isinstance(type_matrix[value], time):
-                        data[key] = time.fromisoformat(value)
+                    if key not in type_matrix:
+                        continue
 
-                    elif isinstance(type_matrix[value], date):
-                        data[key] = date.fromisoformat(value)
+                    if isinstance(type_matrix[key], time):
+                        result_data[key] = time.fromisoformat(value)
 
-                    elif isinstance(type_matrix[value], set):
-                        data[key] = set(value)
+                    elif isinstance(type_matrix[key], date):
+                        result_data[key] = date.fromisoformat(value)
 
-                    elif isinstance(type_matrix[value, tuple]):
-                        data[key] = tuple(value)
+                    elif isinstance(type_matrix[key], set):
+                        result_data[key] = set(value)
 
-                return data
+                    elif isinstance(type_matrix[key], tuple):
+                        result_data[key] = tuple(value)
+
+                    else:
+                        result_data[key] = value
+
+                return result_data
 
             obj = cls()
             obj.path = folder_path
