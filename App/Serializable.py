@@ -1,5 +1,6 @@
 import json
 from os import path
+from datetime import date, time
 
 FILE_NAME: str = "data.meta"
 FILE_HEADER: str = "FILE CREATED BY: THIAGO dA. SILVA\nBCIT - Britsh Columbia Institute of Technology\nTechnical Arts Advanced Course\n"
@@ -18,6 +19,10 @@ def serializable(cls):
     """
 
     class SerializableClass(cls):
+        def __init__(self, folder_path, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._path = folder_path
+
         def serialize(self) -> None:
             """
             Serializes the object's variables and saves them into a file.
@@ -40,12 +45,12 @@ def serializable(cls):
 
             json_string = json.dumps(data, indent=4)
 
-            file_path = path.join(self.path, FILE_NAME)
+            file_path = path.join(self._path, FILE_NAME)
             with open(file_path, "w") as file:
                 file.write(f"{FILE_HEADER}{FILE_DATA_BULLET}{json_string}")
 
         @classmethod
-        def deserialize(cls, folder_path: str) -> cls:
+        def deserialize(cls, folder_path: str, *args, **kwargs) -> cls:
             """
             Loads the serialized data from a file and creates an object of the decorated class.
 
@@ -98,8 +103,8 @@ def serializable(cls):
 
                 return result_data
 
-            obj = cls()
-            obj.path = folder_path
+            obj = cls(*args, **kwargs)
+            obj._path = folder_path
 
             data = read_json_from_file()
             data = fix_mistypes(obj, data)
