@@ -2,7 +2,6 @@ import json
 from os import path
 from datetime import date, time
 
-FILE_NAME: str = "data.meta"
 FILE_HEADER: str = "FILE CREATED BY: THIAGO dA. SILVA\nBCIT - Britsh Columbia Institute of Technology\nTechnical Arts Advanced Course\n"
 FILE_DATA_BULLET: str = "DATA>>>\n"
 NON_SERIALIZABLE_PREFIX: str = "_"
@@ -19,6 +18,8 @@ def serializable(cls):
     """
 
     class SerializableClass(cls):
+        FILE_NAME: str = "data.meta"
+
         def __init__(self, folder_path, *args, **kwargs):
             super().__init__(*args, **kwargs)
             self._path = folder_path
@@ -45,7 +46,7 @@ def serializable(cls):
 
             json_string = json.dumps(data, indent=4)
 
-            file_path = path.join(self._path, FILE_NAME)
+            file_path = path.join(self._path, SerializableClass.FILE_NAME)
             with open(file_path, "w") as file:
                 file.write(f"{FILE_HEADER}{FILE_DATA_BULLET}{json_string}")
 
@@ -70,7 +71,7 @@ def serializable(cls):
 
             def read_json_from_file():
                 """ This method reads the contents of the file, then return a dictionary with its contents """
-                file_path = path.join(folder_path, FILE_NAME)
+                file_path = path.join(folder_path, SerializableClass.FILE_NAME)
                 with open(file_path, "r") as file:
                     file_string = file.read()
 
