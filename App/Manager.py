@@ -26,7 +26,7 @@ class Manager:
             pass
 
         self.main_folder = normalized_folder_path
-        self.load()
+        self.load_shows()
 
     def load_shows(self) -> None:
         """ Loads shows by scanning the main folder and deserializing their metafiles
@@ -44,7 +44,8 @@ class Manager:
             show_metafile = path.join(folder, Show.FILE_NAME)
             if not path.exists(show_metafile):
                 continue
-            show = Show.deserialize(show_metafile)          # TODO Maybe I need to try deserialize and treat errors that if the metafile is broken
+            show = Show.deserialize(show_metafile)
+            # TODO Maybe I need to try deserialize and treat errors that if the metafile is broken
             self.shows.append(show)
 
     def create_show(self, name: str) -> Show:
@@ -59,7 +60,15 @@ class Manager:
         Returns:
             Show: The newly created show object.
         """
-        pass
+        show_folder = path.normpath(path.join(self.main_folder, name))
+        if path.exists(show_folder):
+            # TODO Warn the user this show already exists
+            return
+
+        os.mkdir(show_folder)
+        new_show:Show = Show(show_folder)
+        new_show.name = name
+        new_show.serialize()
 
     def print_shows(self) -> list(str):
         pass
@@ -67,10 +76,9 @@ class Manager:
 
 if __name__ == '__main__':
     FOLDER =  path.normpath('C:\\Users\\Thiago\\Desktop\\Bcit Projects\\Pipeline\\Example\\CompanyName')
-
     manager = Manager()
     manager.install(FOLDER)
-    manager.load(FOLDER)
+    manager.create_show("Super Raptors")
 
 
 
