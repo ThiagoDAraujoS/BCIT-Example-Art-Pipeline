@@ -7,7 +7,7 @@ from Show import Show
 class Manager:
     """ The Manager class handles the management of shows and their associated files """
     def __init__(self):
-        self.shows: list[Show] = []
+        self.shows: dict[str, Show] = {}
         self.main_folder: str = ""
 
     def install(self, folder_path: str) -> None:
@@ -46,7 +46,7 @@ class Manager:
                 continue
             show = Show.deserialize(show_metafile)
             # TODO Maybe I need to try deserialize and treat errors that if the metafile is broken
-            self.shows.append(show)
+            self.shows[show.name] = show
 
     def create_show(self, name: str) -> Show:
         """ Creates a new show with the given name
@@ -70,8 +70,11 @@ class Manager:
         new_show.name = name
         new_show.serialize()
 
-    def print_shows(self) -> list(str):
-        pass
+    def print_shows(self) -> list[str]:
+        " Print the list of archived shows and return their name as a list "
+        show_list = self.shows.keys()
+        print(*show_list)
+        return show_list
 
 
 if __name__ == '__main__':
