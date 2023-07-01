@@ -1,4 +1,5 @@
 import json
+import os
 from os import path
 from datetime import date, time
 
@@ -23,15 +24,14 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
             META_FILE_NAME: str = f"{meta_file_name}.meta"
             """ Constant full serialized file name """
 
-            def __init__(self, folder_path, *args, **kwargs):
+            def __init__(self, folder_path: str = "", *args, **kwargs):
                 super().__init__(*args, **kwargs)
 
-                self.folder_path: str = path.normpath(folder_path)
+                self._folder_path: str = path.normpath(folder_path) if folder_path else ""
                 """ The folder where the serialized file lives in """
 
             def serialize(self) -> None:
-                """
-                Serializes the object's variables and saves them into a file.
+                """ Serializes the object's variables and saves them into a file.
 
                 The object's variables are converted to JSON format and saved into a file.
                 The file is created or overwritten with the serialized data, including the header text. """
@@ -106,11 +106,15 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
 
             def get_file_path(self):
                 """ Return the normalized metafile path """
-                return path.normpath(path.join(self.folder_path, SerializableClass.META_FILE_NAME))
+                return path.normpath(path.join(self._folder_path, SerializableClass.META_FILE_NAME))
 
             def has_serialized_file(self):
                 """ Predicate that returns if the serialized file exists """
                 return path.exists(self.get_file_path())
+
+            def make_directory(self):
+                """ If folder_path directory doesn't exist this method can be used to create it """
+                os.mkdir(self._folder_path)
 
             # TODO Implement a method that check if the serialized file is legal
 
