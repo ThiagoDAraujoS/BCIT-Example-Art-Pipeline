@@ -3,7 +3,7 @@ from os import path
 from datetime import date, time
 
 
-FILE_DATA_BULLET: str = "DATA>>>\n"
+FILE_DATA_BULLET: str = "\nDATA>>>\n"
 NON_SERIALIZABLE_PREFIX: str = "_"
 
 
