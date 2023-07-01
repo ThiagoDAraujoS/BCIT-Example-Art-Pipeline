@@ -30,12 +30,39 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 self._folder_path: str = path.normpath(folder_path) if folder_path else ""
                 """ The folder where the serialized file lives in """
 
-            def serialize(self) -> None:
-                """ Serializes the object's variables and saves them into a file.
+            def decode(self, file_string: str) -> dict:
+                """ This method decode file text into a cls field dictionary
 
-                The object's variables are converted to JSON format and saved into a file.
-                The file is created or overwritten with the serialized data, including the header text. """
+                :returns: dictionary of field names mapped to their values recorded in the text """
+                file_string = file_string.split(FILE_DATA_BULLET)[-1]
+                data = json.loads(file_string)
 
+                type_matrix = self.__dict__
+                result_data = {}
+                for key, value in data.items():
+                    if key not in type_matrix:
+                        continue
+
+                    if isinstance(type_matrix[key], time):
+                        result_data[key] = time.fromisoformat(value)
+
+                    elif isinstance(type_matrix[key], date):
+                        result_data[key] = date.fromisoformat(value)
+
+                    elif isinstance(type_matrix[key], set):
+                        result_data[key] = set(value)
+
+                    elif isinstance(type_matrix[key], tuple):
+                        result_data[key] = tuple(value)
+
+                    else:
+                        result_data[key] = value
+                return result_data
+
+            def encode(self) -> str:
+                """ This method encodes objects fields into a file text
+
+                :returns: a json string containing all the obj's data + header text """
                 data = {}
                 for key, value in self.__dict__.items():
                     if key.startswith(NON_SERIALIZABLE_PREFIX):
@@ -49,10 +76,18 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
 
                     data[key] = value
 
-                json_string = json.dumps(data, indent=4)
+                return f"{header_text}{FILE_DATA_BULLET}{json.dumps(data, indent=4)}"
+
+            def serialize(self) -> None:
+                """ Serializes the object's variables and saves them into a file.
+
+                The object's variables are converted to JSON format and saved into a file.
+                The file is created or overwritten with the serialized data, including the header text. """
+
+                file_text = self.encode()
 
                 with open(self.get_file_path(), "w") as file:
-                    file.write(f"{header_text}{FILE_DATA_BULLET}{json_string}")
+                    file.write(file_text)
 
             @classmethod
             def deserialize(cls, folder_path: str, *args, **kwargs) -> cls:
@@ -66,41 +101,12 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
 
                 :raise FileNotFoundError: If the specified file cannot be found.
                 :raise json.JSONDecodeError: If the serialized JSON data is not valid. """
-
-                def cast_special_types():
-                    """ This method uses the cls to find the real types of the data stored in the file, then fixes the mistyped variables """
-                    type_matrix = obj.__dict__
-                    result_data = {}
-                    for key, value in data.items():
-                        if key not in type_matrix:
-                            continue
-
-                        if isinstance(type_matrix[key], time):
-                            result_data[key] = time.fromisoformat(value)
-
-                        elif isinstance(type_matrix[key], date):
-                            result_data[key] = date.fromisoformat(value)
-
-                        elif isinstance(type_matrix[key], set):
-                            result_data[key] = set(value)
-
-                        elif isinstance(type_matrix[key], tuple):
-                            result_data[key] = tuple(value)
-
-                        else:
-                            result_data[key] = value
-
-                    return result_data
-
                 obj = cls(folder_path=path.normpath(folder_path), *args, **kwargs)
 
                 with open(obj.get_file_path(), "r") as file:
-                    file_string = file.read().split(FILE_DATA_BULLET)[-1]
+                    file_string = file.read()
 
-                data = json.loads(file_string)
-
-                data = cast_special_types()
-
+                data = obj.decode(file_string, obj)
                 obj.__dict__.update(data)
                 return obj
 
@@ -116,7 +122,20 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 """ If folder_path directory doesn't exist this method can be used to create it """
                 os.mkdir(self._folder_path)
 
-            # TODO Implement a method that check if the serialized file is legal
+            def is_serialized_file_legal(self):
+                """ Predicate that verify if the serialized file is legal """
+                try:
+                    with open(self.get_file_path(), "r") as file:
+                        file_string = file.read()
+                    file_string = file_string.split(FILE_DATA_BULLET)[-1]
+                    data = json.loads(file_string)
+                    type_matrix = self.__dict__
+                    for key, _ in data.items():
+                        if key not in type_matrix:
+                            raise Exception(f"Data missmatch between {cls} to file text")
+                except:
+                    return False
+                return True
 
         return SerializableClass
     return decorator
