@@ -10,7 +10,7 @@ class Manager:
         self.shows: dict[str, Show] = {}
         self.main_folder: str = ""
 
-    def install(self, folder_path: str, on_overwrite_callback: Callable[[str],None] | None = None, on_folder_exists_callback: Callable[[str], None] | None = None) -> None:
+    def install(self, folder_path: str, on_overwrite_callback: Callable[[str], None] | None = None, on_folder_exists_callback: Callable[[str], None] | None = None) -> None:
         """ Sets the main folder path for tracking show files
 
         This method sets the main folder path to the specified `folder_path`
@@ -31,17 +31,18 @@ class Manager:
                 A callback function to be executed when the folder already
                 exists. The callback function should take a single argument,
                 which is the path of the new folder that already exists.
-                Defaults to None.
-        """
+                Defaults to None. """
         if self.main_folder and on_overwrite_callback:
             on_overwrite_callback(self.main_folder)
+            return
 
         normalized_folder_path = path.normpath(folder_path)
         if not os.path.exists(normalized_folder_path) and on_folder_exists_callback:
             on_folder_exists_callback(normalized_folder_path)
+            return
 
         self.main_folder = normalized_folder_path
-        self.load_shows()
+        os.mkdir(self.main_folder)
 
     def load_shows(self) -> None:
         """ Loads shows by scanning the main folder and deserializing their metafiles
@@ -49,8 +50,7 @@ class Manager:
         This method populates the `shows` list with instances of the Show class
         by searching for folders within the main folder and checking for the existence
         of metafiles associated with each folder. If a metafile is found, it is deserialized
-        to retrieve the show's information.
-        """
+        to retrieve the show's information. """
         self.shows = []
         for folder in os.listdir(self.main_folder):
             if path.isfile(folder):
@@ -63,7 +63,7 @@ class Manager:
             # TODO Maybe I need to try deserialize and treat errors that if the metafile is broken
             self.shows[show.name] = show
 
-    def create_show(self, name: str) -> Show:
+    def create_show(self, name: str) -> Show | None:
         """ Creates a new show with the given name
 
         This method creates a new instance of the Show class, sets its name
@@ -87,13 +87,13 @@ class Manager:
 
     def print_shows(self) -> list[str]:
         """ Print the list of archived shows and return their name as a list """
-        show_list = self.shows.keys()
+        show_list = list(self.shows.keys())
         print(*show_list)
         return show_list
 
 
 if __name__ == '__main__':
-    FOLDER =  path.normpath('C:\\Users\\Thiago\\Desktop\\Bcit Projects\\Pipeline\\Example\\CompanyName')
+    FOLDER = path.normpath('C:\\Users\\Thiago\\Desktop\\Bcit Projects\\Pipeline\\Example\\CompanyName')
     manager = Manager()
     manager.install(FOLDER)
     manager.create_show("Super Raptors")
