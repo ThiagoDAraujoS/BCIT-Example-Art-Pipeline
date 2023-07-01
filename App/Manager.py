@@ -4,6 +4,7 @@ import os
 from Show import Show
 from typing import Callable
 
+
 class Manager:
     """ The Manager class handles the management of shows and their associated files """
     def __init__(self):
@@ -18,20 +19,18 @@ class Manager:
         executed in certain scenarios, such as when inadvertently overwriting
         a previous installation or when the new folder already exists.
 
-        Parameters:
-            folder_path (str): The path to the main folder.
+        :param folder_path: The path to the main folder.
+        :param on_overwrite_callback:
+            A callback function to be executed when inadvertently
+            overwriting a previous installation. The callback function
+            should take a single argument, which is the path of the
+            existing main folder. Defaults to None.
+        :param on_folder_exists_callback:
+            A callback function to be executed when the folder already
+            exists. The callback function should take a single argument,
+            which is the path of the new folder that already exists.
+            Defaults to None. """
 
-            on_overwrite_callback (Optional[Callable[[str], None]]):
-                A callback function to be executed when inadvertently
-                overwriting a previous installation. The callback function
-                should take a single argument, which is the path of the
-                existing main folder. Defaults to None.
-
-            on_folder_exists_callback (Optional[Callable[[str], None]]):
-                A callback function to be executed when the folder already
-                exists. The callback function should take a single argument,
-                which is the path of the new folder that already exists.
-                Defaults to None. """
         if self.main_folder and on_overwrite_callback:
             on_overwrite_callback(self.main_folder)
             return
@@ -63,21 +62,18 @@ class Manager:
             # TODO Maybe I need to try deserialize and treat errors that if the metafile is broken
             self.shows[show.name] = show
 
-    def create_show(self, name: str) -> Show | None:
+    def create_show(self, name: str, on_show_exists_callback: Callable[[str], None] | None = None) -> Show | None:
         """ Creates a new show with the given name
-
         This method creates a new instance of the Show class, sets its name
         attribute to the specified name, and returns the created show object.
 
-        Parameters:
-            name (str): The name of the new show.
-
-        Returns:
-            Show: The newly created show object.
+        :param name: The name of the new show.
+        :param on_show_exists_callback:
+        :return: The newly created show object or None on failure.
         """
         show_folder = path.normpath(path.join(self.main_folder, name))
-        if path.exists(show_folder):
-            # TODO Warn the user this show already exists
+        if on_show_exists_callback and path.exists(show_folder):
+            on_show_exists_callback(name)
             return
 
         os.mkdir(show_folder)

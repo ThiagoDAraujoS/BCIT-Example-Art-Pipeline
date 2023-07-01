@@ -7,15 +7,13 @@ FILE_DATA_BULLET: str = "DATA>>>\n"
 NON_SERIALIZABLE_PREFIX: str = "_"
 
 def serializable(cls):
-    """
-    Decorator that adds serialization and deserialization methods to a class.
+    """ Decorator that adds serialization and deserialization methods to a class
 
     The decorator will not serialize private _members
     The decorator adds the following variables and methods to the decorated class:
     - self.path: the folder path for the serialized file
     - serialize(): Serializes the object's variables and saves them into a file.
-    - deserialize(folder_path: str): Loads the serialized data from a file and creates an object of the decorated class.
-    """
+    - deserialize(folder_path: str): Loads the serialized data from a file and creates an object of the decorated class. """
 
     class SerializableClass(cls):
         FILE_NAME: str = "data.meta"
@@ -29,8 +27,8 @@ def serializable(cls):
             Serializes the object's variables and saves them into a file.
 
             The object's variables are converted to JSON format and saved into a file.
-            The file is created or overwritten with the serialized data, including the header text.
-            """
+            The file is created or overwritten with the serialized data, including the header text. """
+
             data = {}
             for key, value in self.__dict__.items():
                 if key.startswith(NON_SERIALIZABLE_PREFIX):
@@ -52,22 +50,16 @@ def serializable(cls):
 
         @classmethod
         def deserialize(cls, folder_path: str, *args, **kwargs) -> cls:
-            """
-            Loads the serialized data from a file and creates an object of the decorated class.
+            """ Loads the serialized data from a file and creates an object of the decorated class
 
             The serialized data is loaded from the specified file, and the object of the decorated class is created.
             After the flag 'DATA>>>\n'the file must contain the serialized JSON data
 
-            Args:
-            - folder_path (str): The path to the folder containing the serialized file.
+            :param folder_path: The path to the folder containing the serialized file.
+            :return: An object of the decorated class with the deserialized variables.
 
-            Returns:
-            - An object of the decorated class with the deserialized variables.
-
-            Raises:
-            - FileNotFoundError: If the specified file cannot be found.
-            - json.JSONDecodeError: If the serialized JSON data is not valid.
-            """
+            :raise FileNotFoundError: If the specified file cannot be found.
+            :raise json.JSONDecodeError: If the serialized JSON data is not valid. """
 
             def read_json_from_file():
                 """ This method reads the contents of the file, then return a dictionary with its contents """
