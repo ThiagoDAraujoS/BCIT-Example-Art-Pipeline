@@ -2,7 +2,7 @@ from __future__ import annotations
 from os import path
 import os
 from Show import Show
-
+from typing import Callable
 
 class Manager:
     """ The Manager class handles the management of shows and their associated files """
@@ -10,20 +10,35 @@ class Manager:
         self.shows: dict[str, Show] = {}
         self.main_folder: str = ""
 
-    def install(self, folder_path: str) -> None:
-        """ Sets the main folder path for tracking shows files
+    def install(self, folder_path: str, on_overwrite_callback: Callable[[str],None] | None = None, on_folder_exists_callback: Callable[[str], None] | None = None) -> None:
+        """ Sets the main folder path for tracking show files
+
+        This method sets the main folder path to the specified `folder_path`
+        for tracking show files. Optionally, you can provide callbacks to be
+        executed in certain scenarios, such as when inadvertently overwriting
+        a previous installation or when the new folder already exists.
 
         Parameters:
             folder_path (str): The path to the main folder.
+
+            on_overwrite_callback (Optional[Callable[[str], None]]):
+                A callback function to be executed when inadvertently
+                overwriting a previous installation. The callback function
+                should take a single argument, which is the path of the
+                existing main folder. Defaults to None.
+
+            on_folder_exists_callback (Optional[Callable[[str], None]]):
+                A callback function to be executed when the folder already
+                exists. The callback function should take a single argument,
+                which is the path of the new folder that already exists.
+                Defaults to None.
         """
-        if self.main_folder:
-            # TODO Warn the user theres a main folder being tracked before moving it
-            pass
+        if self.main_folder and on_overwrite_callback:
+            on_overwrite_callback(self.main_folder)
 
         normalized_folder_path = path.normpath(folder_path)
-        if not os.path.exists(normalized_folder_path):
-            # TODO Warn the user the new foder is inexistent
-            pass
+        if not os.path.exists(normalized_folder_path) and on_folder_exists_callback:
+            on_folder_exists_callback(normalized_folder_path)
 
         self.main_folder = normalized_folder_path
         self.load_shows()
@@ -71,7 +86,7 @@ class Manager:
         new_show.serialize()
 
     def print_shows(self) -> list[str]:
-        " Print the list of archived shows and return their name as a list "
+        """ Print the list of archived shows and return their name as a list """
         show_list = self.shows.keys()
         print(*show_list)
         return show_list
