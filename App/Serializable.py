@@ -15,13 +15,17 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
     - self.path: the folder path for the serialized file
     - serialize(): Serializes the object's variables and saves them into a file.
     - deserialize(folder_path: str): Loads the serialized data from a file and creates an object of the decorated class. """
-    meta_file_name = f"{meta_file_name}.meta"
 
     def decorator(cls):
         class SerializableClass(cls):
+            META_FILE_NAME: str = f"{meta_file_name}.meta"
+            """ Constant full serialized file name """
+
             def __init__(self, folder_path, *args, **kwargs):
                 super().__init__(*args, **kwargs)
-                self._path = folder_path
+
+                self.folder_path: str = path.normpath(folder_path)
+                """ The folder where the serialized file lives in """
 
             def serialize(self) -> None:
                 """
@@ -45,8 +49,7 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
 
                 json_string = json.dumps(data, indent=4)
 
-                file_path = path.join(self._path, meta_file_name)
-                with open(file_path, "w") as file:
+                with open(self.get_file_path(), "w") as file:
                     file.write(f"{header_text}{FILE_DATA_BULLET}{json_string}")
 
             @classmethod
@@ -62,17 +65,7 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 :raise FileNotFoundError: If the specified file cannot be found.
                 :raise json.JSONDecodeError: If the serialized JSON data is not valid. """
 
-                def read_json_from_file():
-                    """ This method reads the contents of the file, then return a dictionary with its contents """
-                    file_path = path.join(folder_path, meta_file_name)
-                    with open(file_path, "r") as file:
-                        file_string = file.read()
-
-                    json_string = file_string.split(FILE_DATA_BULLET)[-1]
-
-                    return json.loads(json_string)
-
-                def fix_mistypes():
+                def cast_special_types():
                     """ This method uses the cls to find the real types of the data stored in the file, then fixes the mistyped variables """
                     type_matrix = obj.__dict__
                     result_data = {}
@@ -97,14 +90,27 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
 
                     return result_data
 
-                obj = cls(*args, **kwargs)
-                obj._path = folder_path
+                obj = cls(folder_path=path.normpath(folder_path), *args, **kwargs)
 
-                data = read_json_from_file()
-                data = fix_mistypes()
+                with open(obj.get_file_path(), "r") as file:
+                    file_string = file.read().split(FILE_DATA_BULLET)[-1]
+
+                data = json.loads(file_string)
+
+                data = cast_special_types()
 
                 obj.__dict__.update(data)
                 return obj
+
+            def get_file_path(self):
+                """ Return the normalized metafile path """
+                return path.normpath(path.join(self.folder_path, SerializableClass.META_FILE_NAME))
+
+            def has_serialized_file(self):
+                """ Predicate that returns if the serialized file exists """
+                return path.exists(self.get_file_path())
+
+            # TODO Implement a method that check if the serialized file is legal
 
         return SerializableClass
     return decorator
