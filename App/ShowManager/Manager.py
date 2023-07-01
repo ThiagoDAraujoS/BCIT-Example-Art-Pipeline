@@ -1,9 +1,9 @@
 from __future__ import annotations
 from os import path
 import os
-from Show import Show
+from .Show import Show
 from typing import Callable
-from Serializable import serializable
+from .Serializable import serializable
 
 SHOW_FILE_HEADER: str = """FILE CREATED BY: Thiago de Araujo Silva
 BCIT - British Columbia Institute of Technology
@@ -52,10 +52,12 @@ class Manager:
 
         if os.path.exists(normalized_folder_path):
             if self.has_serialized_file():
-                if on_overwrite_cb: on_overwrite_cb(self._folder_path)
+                if on_overwrite_cb:
+                    on_overwrite_cb(self._folder_path)
                 return 1
             else:
-                if on_folder_collision_cb: on_folder_collision_cb(normalized_folder_path)
+                if on_folder_collision_cb:
+                    on_folder_collision_cb(normalized_folder_path)
                 return 2
 
         self._folder_path = normalized_folder_path
