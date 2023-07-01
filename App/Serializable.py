@@ -7,17 +7,17 @@ FILE_DATA_BULLET: str = "DATA>>>\n"
 NON_SERIALIZABLE_PREFIX: str = "_"
 
 
-def serializable(cls):
-    def decorator(header_text: str = "", meta_file_name: str = "data"):
-        """ Decorator that adds serialization and deserialization methods to a class
+def serializable(header_text: str = "", meta_file_name: str = "data"):
+    """ Decorator that adds serialization and deserialization methods to a class
 
-        The decorator will not serialize private _members
-        The decorator adds the following variables and methods to the decorated class:
-        - self.path: the folder path for the serialized file
-        - serialize(): Serializes the object's variables and saves them into a file.
-        - deserialize(folder_path: str): Loads the serialized data from a file and creates an object of the decorated class. """
+    The decorator will not serialize private _members
+    The decorator adds the following variables and methods to the decorated class:
+    - self.path: the folder path for the serialized file
+    - serialize(): Serializes the object's variables and saves them into a file.
+    - deserialize(folder_path: str): Loads the serialized data from a file and creates an object of the decorated class. """
+    meta_file_name = f"{meta_file_name}.meta"
 
-        meta_file_name = f"{meta_file_name}.meta"
+    def decorator(cls):
         class SerializableClass(cls):
             def __init__(self, folder_path, *args, **kwargs):
                 super().__init__(*args, **kwargs)
