@@ -118,6 +118,10 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 """ Predicate that returns if the serialized file exists """
                 return path.exists(self.get_file_path())
 
+            def folder_exists(self):
+                """ Return if the _folder_path exists """
+                return path.exists(self._folder_path)
+
             def make_directory(self):
                 """ If folder_path directory doesn't exist this method can be used to create it """
                 os.mkdir(self._folder_path)
