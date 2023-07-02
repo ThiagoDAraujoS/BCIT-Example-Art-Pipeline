@@ -1,7 +1,7 @@
 from unittest import TestCase
 import os
 import shutil
-from App.ShowManager.Manager import Manager
+from App.ShowManager.Manager import Manager, Show
 
 
 class TestManager(TestCase):
@@ -20,6 +20,7 @@ class TestManager(TestCase):
         iteration = 0
         while not cls.test_folder_path or os.path.exists(cls.test_folder_path):
             cls.test_folder_path = os.path.normpath(os.path.join(parent_directory, f"test_folder_{iteration}"))
+            iteration += 1
         os.mkdir(cls.test_folder_path)
 
         cls.test_company_path = os.path.normpath(os.path.join(cls.test_folder_path, cls.COMPANY_NAME))
@@ -33,45 +34,92 @@ class TestManager(TestCase):
         self.manager: Manager = Manager()
         """ Default managed obj used for testing """
 
+    def tearDown(self):
+        if os.path.exists(self.test_company_path):
+            shutil.rmtree(self.test_company_path)
+
+
+class TestShowManagement(TestManager):
+    SHOW_NAME: str = "SHOW"
+    """ Constant test show name """
+
+    def setUp(self):
+        super().setUp()
+        self.manager.install(self.test_company_path)
+
+
+class TestInstall(TestManager):
+    def setUp(self):
+        super().setUp()
+
         self.was_overwrite_cb_triggered = False
         """ Assertion variable used to check if install overwrite callback was performed """
 
         self.was_folder_exists_cb_triggered = False
         """ Assertion variable used to check if install folder exists callback was performed """
 
-    def tearDown(self):
-        if os.path.exists(self.test_company_path):
-            shutil.rmtree(self.test_company_path)
-
-
-class TestInstall(TestManager):
-
-    def on_install_overwrite(self, original_folder, *_):
-        self.assertEqual(TestInstall.test_company_path, original_folder, "On Overwrite argument is different than installed folder")
+    def on_overwrite(self, original_folder, *_):
+        self.assertEqual(self.test_company_path, original_folder, "On Overwrite argument is different than installed folder")
         self.was_overwrite_cb_triggered = True
 
-    def on_install_folder_collision(self, collision_folder, *_):
-        self.assertEqual(TestInstall.test_company_path, collision_folder, "On Folder Collision argument is different than existing folder")
+    def on_folder_collision(self, collision_folder, *_):
+        self.assertEqual(self.test_company_path, collision_folder, "On Folder Collision argument is different than existing folder")
         self.was_folder_exists_cb_triggered = True
 
-    def test_install_overwrite(self):
-        self.manager.install(TestInstall.test_company_path)
-        result = self.manager.install(TestInstall.test_company_path, self.on_install_overwrite, self.on_install_folder_collision)
+    def test_overwrite(self):
+        self.manager.install(self.test_company_path)
+        result = self.manager.install(self.test_company_path, self.on_overwrite, self.on_folder_collision)
         self.assertTrue(self.was_overwrite_cb_triggered, "On overwrite callback not called when trying to install on a previously installed folder")
         self.assertFalse(self.was_folder_exists_cb_triggered, "On folder collision called when installation overwrite was the problem")
         self.assertEqual(result, 1, "Return code not 1 when installation met an overwrite case")
 
-    def test_install_collision(self):
-        os.mkdir(TestInstall.test_company_path)
-        result = self.manager.install(TestInstall.test_company_path, self.on_install_overwrite, self.on_install_folder_collision)
+    def test_collision(self):
+        os.mkdir(self.test_company_path)
+        result = self.manager.install(self.test_company_path, self.on_overwrite, self.on_folder_collision)
         self.assertFalse(self.was_overwrite_cb_triggered, "On overwrite called when installation folder collision was the problem")
         self.assertTrue(self.was_folder_exists_cb_triggered, "On folder collision callback not called when a folder was identified in the installation path")
         self.assertEqual(result, 2, "Return code not 1 when installation met an overwrite case")
 
-    def test_install_success(self):
-        self.manager.install(TestInstall.test_company_path, self.on_install_overwrite, self.on_install_folder_collision)
+    def test_success(self):
+        self.manager.install(self.test_company_path, self.on_overwrite, self.on_folder_collision)
         self.assertFalse(self.was_overwrite_cb_triggered, "On Overwrite called when installation was successful")
         self.assertFalse(self.was_folder_exists_cb_triggered, "On folder collision called when installation was successful")
-        self.assertEqual(self.manager._folder_path, TestInstall.test_company_path, "The folder required was not the same as targeted by the installation")
+        self.assertEqual(self.manager._folder_path, self.test_company_path, "The folder required was not the same as targeted by the installation")
         self.assertTrue(os.path.exists(self.manager._folder_path), "The installation folder does not exists")
         self.assertTrue(self.manager.has_serialized_file(), "The manager's meta file does not exist")
+
+
+class TestIsInstalled(TestManager):
+    def test_was_not_installed(self):
+        self.assertFalse(self.manager.is_installed(), "is_installed returned true when the manager was not installed")
+
+    def test_was_installed(self):
+        self.manager.install(self.test_company_path)
+        self.assertTrue(self.manager.is_installed(), "is_installed returned false when the manager was installed")
+
+
+class TestCreateShow(TestShowManagement):
+    def setUp(self):
+        super().setUp()
+        self.was_on_show_exists_triggered = False
+        self.on_show_exists_argument_instance = None
+
+    def on_show_exists(self, show, *_):
+        self.was_on_show_exists_triggered = True
+        self.on_show_exists_argument_instance = show
+
+    def test_create_show(self):
+        result = self.manager.create_show(self.SHOW_NAME, self.on_show_exists)
+        self.assertFalse(self.was_on_show_exists_triggered, "on_show_exists triggered even when the show did not exist previously")
+        self.assertIsInstance(result, Show, "Create Show does not return a show")
+        self.assertIn(self.SHOW_NAME, self.manager._shows, "Show has not been added to manager._shows dictionary")
+        self.assertIs(self.manager._shows[result.name], result, "Value in the newly created manager._shows[show_name:show_instance] pair, does not represent created show instance")
+
+    def test_show_exists(self):
+        self.manager.create_show(self.SHOW_NAME)
+        result = self.manager.create_show(self.SHOW_NAME, self.on_show_exists)
+        self.assertTrue(self.was_on_show_exists_triggered, "on_show_exists didn't trigger when the show existed previously")
+        self.assertIs(result, self.on_show_exists_argument_instance, "Argument 'show' in on_show_exists callback is different than the existing show")
+        self.assertIsInstance(result, Show, "Create Show does not return a show")
+        self.assertIn(self.SHOW_NAME, self.manager._shows, "Show has not been added to manager._shows dictionary")
+        self.assertIs(self.manager._shows[result.name], result, "Value in the newly created manager._shows[show_name:show_instance] pair, does not represent created show instance")
