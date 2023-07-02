@@ -1,8 +1,10 @@
 from __future__ import annotations
+from typing import Callable
+
 from os import path
 import os
+
 from .Show import Show
-from typing import Callable
 from .Serializable import serializable
 
 SHOW_FILE_HEADER: str = """FILE CREATED BY: Thiago de Araujo Silva
@@ -65,7 +67,7 @@ class Manager:
         self.serialize()
         return 0
 
-    def create_show(self, name: str, on_show_folder_exists_cb: Callable[[str], None] | None = None) -> Show | None:
+    def create_show(self, name: str, on_show_folder_exists_cb: Callable[[Show], None] | None = None) -> Show | None:
         """ Creates a new show with the given name
 
         This method creates a new instance of the Show class, sets its name
@@ -75,9 +77,16 @@ class Manager:
         :param on_show_folder_exists_cb:
         :return: The newly created show object or None on failure."""
         show_folder = path.normpath(path.join(self._folder_path, name))
-        if path.exists(show_folder):
-            if on_show_folder_exists_cb: on_show_folder_exists_cb(name)
-            return None
+
+        if not name:
+            raise Exception("Show name must be provided")
+
+        if name in self._shows:
+            show = self._shows[name]
+            if show.is_serialized_file_legal():
+                if on_show_folder_exists_cb:
+                    on_show_folder_exists_cb(show)
+                    return show
 
         show: Show = Show(show_folder)
         show.name = name
