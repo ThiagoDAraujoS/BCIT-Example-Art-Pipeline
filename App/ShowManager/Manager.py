@@ -120,10 +120,3 @@ class Manager:
         show_list = list(self._shows.keys())
         print(*show_list)
         return show_list
-
-
-if __name__ == '__main__':
-    FOLDER = path.normpath('C:\\Users\\Thiago\\Desktop\\Bcit Projects\\Pipeline\\Example\\CompanyName')
-    manager = Manager()
-    manager.install(FOLDER)
-    manager.create_show("Super Raptors")
