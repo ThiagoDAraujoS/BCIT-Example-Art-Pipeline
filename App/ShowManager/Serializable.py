@@ -106,7 +106,7 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 with open(obj.get_file_path(), "r") as file:
                     file_string = file.read()
 
-                data = obj.decode(file_string, obj)
+                data = obj.decode(file_string)
                 obj.__dict__.update(data)
                 return obj
 
