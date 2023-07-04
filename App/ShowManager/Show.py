@@ -2,16 +2,14 @@ from .Serializable import serializable
 from datetime import date, time
 from .Episode import Episode
 
-
-SHOW_FILE_HEADER: str = """FILE CREATED BY: Thiago de Araujo Silva
+FILE_NAME: str = "show"
+FILE_HEADER: str = """FILE CREATED BY: Thiago de Araujo Silva
 BCIT - British Columbia Institute of Technology
 Advanced Technical Arts Course
 This file contains serialized show information."""
 
-SHOW_FILE_NAME: str = "show"
 
-
-@serializable(SHOW_FILE_HEADER, SHOW_FILE_NAME)
+@serializable(FILE_HEADER, FILE_NAME)
 class Show:
     """ A class representing a show """
     def __init__(self):

@@ -1,19 +1,24 @@
+from __future__ import annotations
 from .Shot import Shot
 from datetime import time, date, timedelta
 from .Serializable import serializable
 
 ACT_ONE, ACT_TWO, ACT_THREE = 0, 1, 2
 
-FILE_HEADER: str = "FILE CREATED BY: THIAGO dA. SILVA\nBCIT - British Columbia Institute of Technology\nTechnical Arts Advanced Course\n"
+FILE_NAME: str = "episode"
+FILE_HEADER: str = """FILE CREATED BY: Thiago de Araujo Silva
+BCIT - British Columbia Institute of Technology
+Advanced Technical Arts Course
+This file contains serialized episode information."""
 
 
-@serializable(FILE_HEADER)
+@serializable(FILE_HEADER, FILE_NAME)
 class Episode:
     def __init__(self, number: int, release_date: date = date(1, 1, 1)):
-        self._acts: list[set[Shot]] = [[], [], []]
+        self._acts: tuple[set[Shot], set[Shot], set[Shot]] = (set(), set(), set())
 
         self.number: int = -1
-        self.release_date: date = date.now()
+        self.release_date: date = date(1, 1, 1)
 
     def duration(self) -> timedelta:
         """ Return the episode's total duration by summing its shots' lengths """
@@ -28,7 +33,7 @@ class Episode:
             total_duration += duration
         return total_duration
 
-    def create_shot(self, clip_number: int, act: int, length: time, characters: set = set(), environments: set = set()):
+    def create_shot(self, clip_number: int, act: int, length: time, characters: set | None = None, environments: set | None = None):
         """ Create a new shot and add it to an act collection """
         shot = Shot(clip_number, act, length, characters, environments)
         shot.create()

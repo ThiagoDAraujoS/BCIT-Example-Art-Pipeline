@@ -1,4 +1,4 @@
-import App.ShowManager.Manager as Manager
+from App.ShowManager import Manager
 import os.path as path
 
 if __name__ == '__main__':

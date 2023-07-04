@@ -7,15 +7,14 @@ import os
 from .Show import Show
 from .Serializable import serializable
 
-SHOW_FILE_HEADER: str = """FILE CREATED BY: Thiago de Araujo Silva
+FILE_NAME: str = "company"
+FILE_HEADER: str = """FILE CREATED BY: Thiago de Araujo Silva
 BCIT - British Columbia Institute of Technology
 Advanced Technical Arts Course
 This file contains serialized show manager information."""
 
-SHOW_FILE_NAME: str = "company"
 
-
-@serializable(SHOW_FILE_HEADER, SHOW_FILE_NAME)
+@serializable(FILE_HEADER, FILE_NAME)
 class Manager:
     """ The Manager class handles the management of shows and their associated files """
     def __init__(self):
