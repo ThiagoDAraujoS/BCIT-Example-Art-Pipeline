@@ -94,24 +94,28 @@ class Manager:
         self._shows[name] = show
         return show
 
-    def load_shows(self) -> None:
+    def load(self, folder_path: str | None = None) -> None:
         """ Loads shows by scanning the main folder and deserializing their metafiles
 
         This method populates the `shows` list with instances of the Show class
         by searching for folders within the main folder and checking for the existence
         of metafiles associated with each folder. If a metafile is found, it is deserialized
         to retrieve the show's information. """
+        if folder_path:
+            self._folder_path = folder_path
+
         self._shows = {}
         for folder in os.listdir(self._folder_path):
+            folder = path.join(self._folder_path, folder)
             if path.isfile(folder):
                 continue
 
-            show_metafile = path.join(folder, Show.FILE_NAME)
-            if not path.exists(show_metafile):
+            try:
+                show = Show.deserialize(folder)
+            except:
+                print(f"Error on deserializing {folder}")
                 continue
 
-            show = Show.deserialize(show_metafile)
-            # TODO Maybe I need to try deserialize and treat errors that if the metafile is broken
             self._shows[show.name] = show
 
     def print_shows(self) -> list[str]:
