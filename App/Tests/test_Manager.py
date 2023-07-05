@@ -4,7 +4,7 @@ import shutil
 from App.ShowManager.Manager import Manager, Show
 
 
-class TestManager(TestCase):
+class SetupBaseDirectory(TestCase):
     COMPANY_NAME: str = "COMPANY"
     """ Constant with generic test company name """
 
@@ -30,6 +30,8 @@ class TestManager(TestCase):
         if os.path.exists(cls.test_folder_path):
             shutil.rmtree(cls.test_folder_path)
 
+
+class SetupManager(SetupBaseDirectory):
     def setUp(self):
         self.manager: Manager = Manager()
         """ Default managed obj used for testing """
@@ -39,16 +41,22 @@ class TestManager(TestCase):
             shutil.rmtree(self.test_company_path)
 
 
-class TestShowManagement(TestManager):
-    SHOW_NAME: str = "SHOW"
-    """ Constant test show name """
-
+class SetupInstalledManager(SetupManager):
     def setUp(self):
         super().setUp()
         self.manager.install(self.test_company_path)
 
 
-class TestInstall(TestManager):
+class SetupCompleteProject(SetupInstalledManager):
+    def setUp(self):
+        super().setUp()
+        self.show_names = "Test1", "Test2", "Test3"
+        self.manager.create_show(self.show_names[0])
+        self.manager.create_show(self.show_names[1])
+        self.manager.create_show(self.show_names[2])
+
+
+class TestInstall(SetupManager):
     def setUp(self):
         super().setUp()
 
@@ -89,7 +97,7 @@ class TestInstall(TestManager):
         self.assertTrue(self.manager.has_serialized_file(), "The manager's meta file does not exist")
 
 
-class TestIsInstalled(TestManager):
+class TestIsInstalled(SetupManager):
     def test_was_not_installed(self):
         self.assertFalse(self.manager.is_installed(), "is_installed returned true when the manager was not installed")
 
@@ -98,7 +106,10 @@ class TestIsInstalled(TestManager):
         self.assertTrue(self.manager.is_installed(), "is_installed returned false when the manager was installed")
 
 
-class TestCreateShow(TestShowManagement):
+class TestCreateShow(SetupInstalledManager):
+    SHOW_NAME: str = "SHOW"
+    """ Constant test show name """
+
     def setUp(self):
         super().setUp()
         self.was_on_show_exists_triggered = False
@@ -123,3 +134,22 @@ class TestCreateShow(TestShowManagement):
         self.assertIsInstance(result, Show, "Create Show does not return a show")
         self.assertIn(self.SHOW_NAME, self.manager._shows, "Show has not been added to manager._shows dictionary")
         self.assertIs(self.manager._shows[result.name], result, "Value in the newly created manager._shows[show_name:show_instance] pair, does not represent created show instance")
+
+
+class TestLoad(SetupCompleteProject):
+    def setUp(self):
+        super().setUp()
+
+        # Reset Manager object
+        self.manager = Manager()
+
+    def test_load(self):
+        self.manager.load(self.test_company_path)
+        created_shows = list(self.manager._shows.keys())
+        self.assertListEqual(sorted(self.show_names), sorted(created_shows), "Not all shows have been loaded properly")
+        are_values_filled = True
+        for key, value in self.manager._shows.items():
+            if not value:
+                are_values_filled = False
+        self.assertTrue(are_values_filled, "All shows have been read but not all show objects have been created")
+        self.assertEqual(self.manager._folder_path, self.test_company_path, "Folder Path have not been updated properlly")
