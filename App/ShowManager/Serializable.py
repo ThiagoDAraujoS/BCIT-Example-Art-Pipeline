@@ -30,6 +30,12 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 self._folder_path: str = path.normpath(folder_path) if folder_path else ""
                 """ The folder where the serialized file lives in """
 
+            def print(self) -> str:
+                """ Same as Encode, but it prints the contained data before returning """
+                data = self.encode()
+                print(data)
+                return data
+
             def decode(self, file_string: str) -> dict:
                 """ This method decode file text into a cls field dictionary
 
@@ -75,8 +81,7 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                         value = list(value)
 
                     data[key] = value
-
-                return f"{header_text}{FILE_DATA_BULLET}{json.dumps(data, indent=4)}"
+                return json.dumps(data, indent=4)
 
             def serialize(self) -> None:
                 """ Serializes the object's variables and saves them into a file.
@@ -84,7 +89,7 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 The object's variables are converted to JSON format and saved into a file.
                 The file is created or overwritten with the serialized data, including the header text. """
 
-                file_text = self.encode()
+                file_text = f"{header_text}{FILE_DATA_BULLET}{self.encode()}"
 
                 with open(self.get_file_path(), "w") as file:
                     file.write(file_text)
