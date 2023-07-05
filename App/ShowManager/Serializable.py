@@ -115,6 +115,10 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 obj.__dict__.update(data)
                 return obj
 
+            def set_folder_path(self, folder_path):
+                """ Setter for the folder path variable """
+                self._folder_path = folder_path
+
             def get_file_path(self):
                 """ Return the normalized metafile path """
                 return path.normpath(path.join(self._folder_path, SerializableClass.META_FILE_NAME))

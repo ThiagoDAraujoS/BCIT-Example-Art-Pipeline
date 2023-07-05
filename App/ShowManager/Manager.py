@@ -6,6 +6,7 @@ import os
 
 from .Show import Show
 from .Serializable import serializable
+from .SerializableDict import SerializableDict
 
 FILE_NAME: str = "company"
 FILE_HEADER: str = """FILE CREATED BY: Thiago de Araujo Silva
@@ -15,17 +16,11 @@ This file contains serialized show manager information."""
 
 
 @serializable(FILE_HEADER, FILE_NAME)
-class Manager:
+class Manager(SerializableDict):
     """ The Manager class handles the management of shows and their associated files """
+
     def __init__(self):
-        self._shows: dict[str, Show] = {}
-        """ List of shows """
-
-        self._folder_path: str = ""
-        """ Path to the serialized file's folder, this is added by the serializable decorator """
-
-    def is_installed(self) -> bool:
-        return self.has_serialized_file() and self.is_serialized_file_legal()
+        super().__init__(Show)
 
     def install(self, folder_path: str, on_overwrite_cb: Callable[[str], None] | None = None, on_folder_collision_cb: Callable[[str], None] | None = None) -> int:
         """ Sets the main folder path for tracking show files and generate a folder to receive such files
@@ -66,60 +61,5 @@ class Manager:
         self.serialize()
         return 0
 
-    def create_show(self, name: str, on_show_folder_exists_cb: Callable[[Show], None] | None = None) -> Show | None:
-        """ Creates a new show with the given name
-
-        This method creates a new instance of the Show class, sets its name
-        attribute to the specified name, and returns the created show object.
-
-        :param name: The name of the new show.
-        :param on_show_folder_exists_cb:
-        :return: The newly created show object or None on failure."""
-        show_folder = path.normpath(path.join(self._folder_path, name))
-
-        if not name:
-            raise Exception("Show name must be provided")
-
-        if name in self._shows:
-            show = self._shows[name]
-            if show.is_serialized_file_legal():
-                if on_show_folder_exists_cb:
-                    on_show_folder_exists_cb(show)
-                    return show
-
-        show: Show = Show(show_folder)
-        show.name = name
-        show.make_directory()
-        show.serialize()
-        self._shows[name] = show
-        return show
-
-    def load(self, folder_path: str | None = None) -> None:
-        """ Loads shows by scanning the main folder and deserializing their metafiles
-
-        This method populates the `shows` list with instances of the Show class
-        by searching for folders within the main folder and checking for the existence
-        of metafiles associated with each folder. If a metafile is found, it is deserialized
-        to retrieve the show's information. """
-        if folder_path:
-            self._folder_path = folder_path
-
-        self._shows = {}
-        for folder in os.listdir(self._folder_path):
-            folder = path.join(self._folder_path, folder)
-            if path.isfile(folder):
-                continue
-
-            try:
-                show = Show.deserialize(folder)
-            except:
-                print(f"Error on deserializing {folder}")
-                continue
-
-            self._shows[show.name] = show
-
-    def print_shows(self) -> list[str]:
-        """ Print the list of archived shows and return their name as a list """
-        show_list = list(self._shows.keys())
-        print(*show_list)
-        return show_list
+    def is_installed(self) -> bool:
+        return self.has_serialized_file() and self.is_serialized_file_legal()
