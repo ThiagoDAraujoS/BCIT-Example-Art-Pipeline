@@ -41,19 +41,21 @@ class SetupManager(SetupBaseDirectory):
             shutil.rmtree(self.test_company_path)
 
 
-class SetupInstalledManager(SetupManager):
+class SetupInstallation(SetupManager):
     def setUp(self):
         super().setUp()
         self.manager.install(self.test_company_path)
 
 
-class SetupCompleteProject(SetupInstalledManager):
+class SetupSampleProject(SetupInstallation):
     def setUp(self):
         super().setUp()
         self.show_names = "Test1", "Test2", "Test3"
         self.manager.create_show(self.show_names[0])
         self.manager.create_show(self.show_names[1])
         self.manager.create_show(self.show_names[2])
+
+# -----------------------------------------------------------------------------
 
 
 class TestInstall(SetupManager):
@@ -106,7 +108,7 @@ class TestIsInstalled(SetupManager):
         self.assertTrue(self.manager.is_installed(), "is_installed returned false when the manager was installed")
 
 
-class TestCreateShow(SetupInstalledManager):
+class TestCreateShow(SetupInstallation):
     SHOW_NAME: str = "SHOW"
     """ Constant test show name """
 
@@ -119,7 +121,7 @@ class TestCreateShow(SetupInstalledManager):
         self.was_on_show_exists_triggered = True
         self.on_show_exists_argument_instance = show
 
-    def test_create_show(self):
+    def test_create_new_show(self):
         result = self.manager.create_show(self.SHOW_NAME, self.on_show_exists)
         self.assertFalse(self.was_on_show_exists_triggered, "on_show_exists triggered even when the show did not exist previously")
         self.assertIsInstance(result, Show, "Create Show does not return a show")
@@ -136,11 +138,11 @@ class TestCreateShow(SetupInstalledManager):
         self.assertIs(self.manager._shows[result.name], result, "Value in the newly created manager._shows[show_name:show_instance] pair, does not represent created show instance")
 
 
-class TestLoad(SetupCompleteProject):
+class TestLoad(SetupSampleProject):
     def setUp(self):
         super().setUp()
 
-        # Reset Manager object
+        # Reset Manager object before testing the load function
         self.manager = Manager()
 
     def test_load(self):
