@@ -1,7 +1,25 @@
 import os
 import shutil
+from datetime import date, time
 from unittest import TestCase
-from App.ShowManager.Manager import Manager
+
+from App.ShowManager.Serializable import serializable
+
+HEADER = "HEADER"
+FILE = "test"
+
+
+@serializable(HEADER, FILE)
+class SerializableTestClass:
+    def __init__(self):
+        self.i: int = 1
+        self.f: float = 1.0
+        self.s: str = "string"
+        self.d: date = date(1, 1, 1)
+        self.t: time = time(1, 1, 1)
+        self.li: list = [1, 2, 3]
+        self.se: set = {1, 2, 3}
+        self.di: dict = {"1": 1, "2": 2, "3": 3}
 
 
 class SetupBaseDirectory(TestCase):
@@ -23,43 +41,3 @@ class SetupBaseDirectory(TestCase):
     def tearDownClass(cls) -> None:
         if os.path.exists(cls.test_folder_path):
             shutil.rmtree(cls.test_folder_path)
-
-
-class SetupManager(SetupBaseDirectory):
-    """ this setup class builds a manager object and sets a company folder for it """
-
-    COMPANY_NAME: str = "COMPANY"
-    """ Constant with generic test company name """
-
-    test_company_path: str = ""
-    """ The folder path containing the company folder """
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
-        cls.test_company_path = os.path.normpath(os.path.join(cls.test_folder_path, cls.COMPANY_NAME))
-
-    def setUp(self):
-        self.manager: Manager = Manager()
-        """ Default managed obj used for testing """
-
-    def tearDown(self):
-        if os.path.exists(self.test_company_path):
-            shutil.rmtree(self.test_company_path)
-
-
-class SetupInstallation(SetupManager):
-    """ this setup class installs the manager """
-    def setUp(self):
-        super().setUp()
-        self.manager.install(self.test_company_path)
-
-
-class SetupSampleProject(SetupInstallation):
-    """ this setup class builds a fake project """
-    def setUp(self):
-        super().setUp()
-        self.show_names = ["Test1", "Test2", "Test3"]
-        self.manager.create_show(self.show_names[0])
-        self.manager.create_show(self.show_names[1])
-        self.manager.create_show(self.show_names[2])

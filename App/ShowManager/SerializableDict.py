@@ -9,10 +9,10 @@ from App.ShowManager.Serializable import serializable
 class SerializableDict(dict):
     """ This class describes a dictionary that manages serializable elements """
 
-    def __init__(self, value_type: type):
+    def __init__(self, value_type: type, folder_path: str = ""):
         super().__init__()
         self._value_type = value_type
-        self._folder_path: str = ""
+        self._folder_path: str = folder_path
 
     def create_element(self, name: str, on_folder_exists_cb: Callable[[serializable], None] | None = None,  *args, **kwargs) -> serializable:
         element_folder = path.normpath(path.join(self._folder_path, name))
@@ -40,18 +40,17 @@ class SerializableDict(dict):
             self._folder_path = folder_path
 
         self.clear()
-        for folder in os.listdir(self._folder_path):
-            folder = path.join(self._folder_path, folder)
-            if path.isfile(folder):
+        for folder_name in os.listdir(self._folder_path):
+            path_to_folder = path.join(self._folder_path, folder_name)
+            if path.isfile(path_to_folder):
                 continue
-
             try:
-                element = self._value_type.deserialize(folder)
+                element = self._value_type.deserialize(path_to_folder)
             except:
-                print(f"Error on deserializing {folder}")
+                print(f"Error on deserializing {path_to_folder}")
                 continue
 
-            self[element.name] = element
+            self[folder_name] = element
 
     def print_names(self) -> list[str]:
         """ Print the list of archived shows and return their name as a list """
@@ -62,3 +61,5 @@ class SerializableDict(dict):
     def get_element_count(self) -> int:
         return len(self)
 
+    def set_folder_path(self, folder_path: str):
+        self._folder_path = folder_path

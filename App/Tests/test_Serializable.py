@@ -1,25 +1,7 @@
 import json
 import os
 from datetime import date, time
-from App.ShowManager.Serializable import serializable
-
-from App.Tests.test import SetupBaseDirectory
-
-HEADER = "HEADER"
-FILE = "test"
-
-
-@serializable(HEADER, FILE)
-class TestSubject:
-    def __init__(self):
-        self.i: int = 1
-        self.f: float = 1.0
-        self.s: str = "string"
-        self.d: date = date(1, 1, 1)
-        self.t: time = time(1, 1, 1)
-        self.li: list = [1, 2, 3]
-        self.se: set = {1, 2, 3}
-        self.di: dict = {"1": 1, "2": 2, "3": 3}
+from App.Tests.test_setup import SetupBaseDirectory, SerializableTestClass, HEADER
 
 
 class TestSerializableClass(SetupBaseDirectory):
@@ -31,7 +13,7 @@ class TestSerializableClass(SetupBaseDirectory):
     def setUpClass(cls) -> None:
         super().setUpClass()
 
-        cls.instance = TestSubject()
+        cls.instance = SerializableTestClass()
         cls.instance.set_folder_path(cls.test_folder_path)
         data = {}
         for key, value in cls.instance.__dict__.items():
@@ -63,7 +45,7 @@ class TestSerializableClass(SetupBaseDirectory):
         path = self.instance._folder_path
         self.instance.serialize()
         self.assertTrue(self.instance.has_serialized_file(), "Serialized file does not exist")
-        test = TestSubject.deserialize(path)
+        test = SerializableTestClass.deserialize(path)
         self.assertDictEqual(self.instance.__dict__, test.__dict__, "Deserialized object is not identical to original instance")
 
     def test_make_directory(self):
