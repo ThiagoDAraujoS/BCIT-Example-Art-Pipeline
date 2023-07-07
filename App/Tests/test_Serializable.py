@@ -44,7 +44,7 @@ class TestSerializableClass(SetupBaseDirectory):
     def test_serialize_deserialize(self):
         path = self.instance._folder
         self.instance.serialize()
-        self.assertTrue(self.instance.has_serialized_file(), "Serialized file does not exist")
+        self.assertTrue(self.instance.file_exists(), "Serialized file does not exist")
         test = SerializableTestClass.deserialize(path)
         self.assertDictEqual(self.instance.__dict__, test.__dict__, "Deserialized object is not identical to original instance")
 
@@ -52,7 +52,7 @@ class TestSerializableClass(SetupBaseDirectory):
         path = self.instance._folder
         new_path = os.path.join(path, "test")
         self.instance.set_folder(new_path)
-        self.instance.make_directory()
+        self.instance.create_folder()
         self.assertTrue(os.path.exists(self.instance._folder), "Make directory did not create a directory")
         self.instance.set_folder(path)
 

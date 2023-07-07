@@ -47,7 +47,7 @@ class Manager(SerializableDict):
         normalized_folder_path = path.normpath(folder_path)
 
         if os.path.exists(normalized_folder_path):
-            if self.has_serialized_file():
+            if self.file_exists():
                 if on_overwrite_cb:
                     on_overwrite_cb(self._folder)
                 return 1
@@ -57,9 +57,9 @@ class Manager(SerializableDict):
                 return 2
 
         self._folder = normalized_folder_path
-        self.make_directory()
+        self.create_folder()
         self.serialize()
         return 0
 
     def is_installed(self) -> bool:
-        return self.has_serialized_file() and self.is_serialized_file_legal()
+        return self.file_exists() and self.is_file_legal()

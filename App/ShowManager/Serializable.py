@@ -116,32 +116,36 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 obj.__dict__.update(data)
                 return obj
 
-            def delete_folder(self):
-                """ Delete the serialized folder and its contents """
-                if self.has_serialized_file():
-                    shutil.rmtree(self._folder)
+            def get_folder(self):
+                """ return folder path """
+                return self._folder
 
             def set_folder(self, folder_path):
                 """ Setter for the folder path variable """
                 self._folder = folder_path
 
-            def get_file(self):
-                """ Return the normalized metafile path """
-                return path.normpath(path.join(self._folder, SerializableClass.META_FILE_NAME))
+            def create_folder(self):
+                """ If folder_path directory doesn't exist this method can be used to create it """
+                os.mkdir(self._folder)
 
-            def has_serialized_file(self):
-                """ Predicate that returns if the serialized file exists """
-                return path.exists(self.get_file())
+            def delete_folder(self):
+                """ Delete the serialized folder and its contents """
+                if self.folder_exists():
+                    shutil.rmtree(self._folder)
 
             def folder_exists(self):
                 """ Return if the _folder_path exists """
                 return path.exists(self._folder)
 
-            def make_directory(self):
-                """ If folder_path directory doesn't exist this method can be used to create it """
-                os.mkdir(self._folder)
+            def get_file(self):
+                """ Return the normalized metafile path """
+                return path.normpath(path.join(self._folder, SerializableClass.META_FILE_NAME))
 
-            def is_serialized_file_legal(self):
+            def file_exists(self):
+                """ Predicate that returns if the serialized file exists """
+                return path.exists(self.get_file())
+
+            def is_file_legal(self):
                 """ Predicate that verify if the serialized file is legal """
                 try:
                     with open(self.get_file(), "r") as file:

@@ -59,7 +59,7 @@ class TestManager(SetupBaseDirectory):
         self.assertFalse(self.was_folder_exists_cb_triggered, "On folder collision called when installation was successful")
         self.assertEqual(self.manager._folder, self.test_company_path, "The folder required was not the same as targeted by the installation")
         self.assertTrue(os.path.exists(self.manager._folder), "The installation folder does not exists")
-        self.assertTrue(self.manager.has_serialized_file(), "The manager's meta file does not exist")
+        self.assertTrue(self.manager.file_exists(), "The manager's meta file does not exist")
 
     def test_was_not_installed(self):
         self.assertFalse(self.manager.is_installed(), "is_installed returned true when the manager was not installed")

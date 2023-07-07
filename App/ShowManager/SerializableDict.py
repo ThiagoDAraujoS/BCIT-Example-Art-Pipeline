@@ -22,7 +22,7 @@ class SerializableDict(dict):
 
         if name in self:
             element = self[name]
-            if element.is_serialized_file_legal():
+            if element.is_file_legal():
                 if on_folder_exists_cb:
                     on_folder_exists_cb(element)
                     return element
@@ -30,7 +30,7 @@ class SerializableDict(dict):
         element = self._value_type(*args, **kwargs)
         element.name = name
         element.set_folder(element_folder)
-        element.make_directory()
+        element.create_folder()
         element.serialize()
         self[name] = element
         return element
