@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 from os import path
 from datetime import date, time
 
@@ -27,7 +28,7 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
             def __init__(self, folder_path: str = "", *args, **kwargs):
                 super().__init__(*args, **kwargs)
 
-                self._folder_path: str = path.normpath(folder_path) if folder_path else ""
+                self._folder: str = path.normpath(folder_path) if folder_path else ""
                 """ The folder where the serialized file lives in """
 
             def print(self) -> str:
@@ -91,7 +92,7 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
 
                 file_text = f"{header_text}{FILE_DATA_BULLET}{self.encode()}"
 
-                with open(self.get_file_path(), "w") as file:
+                with open(self.get_file(), "w") as file:
                     file.write(file_text)
 
             @classmethod
@@ -108,37 +109,42 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 :raise json.JSONDecodeError: If the serialized JSON data is not valid. """
                 obj = cls(folder_path=path.normpath(folder_path), *args, **kwargs)
 
-                with open(obj.get_file_path(), "r") as file:
+                with open(obj.get_file(), "r") as file:
                     file_string = file.read()
 
                 data = obj.decode(file_string)
                 obj.__dict__.update(data)
                 return obj
 
-            def set_folder_path(self, folder_path):
-                """ Setter for the folder path variable """
-                self._folder_path = folder_path
+            def delete_folder(self):
+                """ Delete the serialized folder and its contents """
+                if self.has_serialized_file():
+                    shutil.rmtree(self._folder)
 
-            def get_file_path(self):
+            def set_folder(self, folder_path):
+                """ Setter for the folder path variable """
+                self._folder = folder_path
+
+            def get_file(self):
                 """ Return the normalized metafile path """
-                return path.normpath(path.join(self._folder_path, SerializableClass.META_FILE_NAME))
+                return path.normpath(path.join(self._folder, SerializableClass.META_FILE_NAME))
 
             def has_serialized_file(self):
                 """ Predicate that returns if the serialized file exists """
-                return path.exists(self.get_file_path())
+                return path.exists(self.get_file())
 
             def folder_exists(self):
                 """ Return if the _folder_path exists """
-                return path.exists(self._folder_path)
+                return path.exists(self._folder)
 
             def make_directory(self):
                 """ If folder_path directory doesn't exist this method can be used to create it """
-                os.mkdir(self._folder_path)
+                os.mkdir(self._folder)
 
             def is_serialized_file_legal(self):
                 """ Predicate that verify if the serialized file is legal """
                 try:
-                    with open(self.get_file_path(), "r") as file:
+                    with open(self.get_file(), "r") as file:
                         file_string = file.read()
                     file_string = file_string.split(FILE_DATA_BULLET)[-1]
                     data = json.loads(file_string)

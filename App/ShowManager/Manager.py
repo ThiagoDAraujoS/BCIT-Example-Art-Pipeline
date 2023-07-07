@@ -49,14 +49,14 @@ class Manager(SerializableDict):
         if os.path.exists(normalized_folder_path):
             if self.has_serialized_file():
                 if on_overwrite_cb:
-                    on_overwrite_cb(self._folder_path)
+                    on_overwrite_cb(self._folder)
                 return 1
             else:
                 if on_folder_collision_cb:
                     on_folder_collision_cb(normalized_folder_path)
                 return 2
 
-        self._folder_path = normalized_folder_path
+        self._folder = normalized_folder_path
         self.make_directory()
         self.serialize()
         return 0

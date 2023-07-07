@@ -57,8 +57,8 @@ class TestManager(SetupBaseDirectory):
         self.manager.install(self.test_company_path, self.on_overwrite, self.on_folder_collision)
         self.assertFalse(self.was_overwrite_cb_triggered, "On Overwrite called when installation was successful")
         self.assertFalse(self.was_folder_exists_cb_triggered, "On folder collision called when installation was successful")
-        self.assertEqual(self.manager._folder_path, self.test_company_path, "The folder required was not the same as targeted by the installation")
-        self.assertTrue(os.path.exists(self.manager._folder_path), "The installation folder does not exists")
+        self.assertEqual(self.manager._folder, self.test_company_path, "The folder required was not the same as targeted by the installation")
+        self.assertTrue(os.path.exists(self.manager._folder), "The installation folder does not exists")
         self.assertTrue(self.manager.has_serialized_file(), "The manager's meta file does not exist")
 
     def test_was_not_installed(self):

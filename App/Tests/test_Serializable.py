@@ -14,7 +14,7 @@ class TestSerializableClass(SetupBaseDirectory):
         super().setUpClass()
 
         cls.instance = SerializableTestClass()
-        cls.instance.set_folder_path(cls.test_folder_path)
+        cls.instance.set_folder(cls.test_folder_path)
         data = {}
         for key, value in cls.instance.__dict__.items():
             if key.startswith("_"):
@@ -42,17 +42,17 @@ class TestSerializableClass(SetupBaseDirectory):
         self.assertEqual(result, self.json, "Encoded dictionary, is not equal to file json")
 
     def test_serialize_deserialize(self):
-        path = self.instance._folder_path
+        path = self.instance._folder
         self.instance.serialize()
         self.assertTrue(self.instance.has_serialized_file(), "Serialized file does not exist")
         test = SerializableTestClass.deserialize(path)
         self.assertDictEqual(self.instance.__dict__, test.__dict__, "Deserialized object is not identical to original instance")
 
     def test_make_directory(self):
-        path = self.instance._folder_path
+        path = self.instance._folder
         new_path = os.path.join(path, "test")
-        self.instance.set_folder_path(new_path)
+        self.instance.set_folder(new_path)
         self.instance.make_directory()
-        self.assertTrue(os.path.exists(self.instance._folder_path), "Make directory did not create a directory")
-        self.instance.set_folder_path(path)
+        self.assertTrue(os.path.exists(self.instance._folder), "Make directory did not create a directory")
+        self.instance.set_folder(path)
 
