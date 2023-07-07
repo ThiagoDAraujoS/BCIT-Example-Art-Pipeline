@@ -37,13 +37,15 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 print(data)
                 return data
 
-            def decode(self, file_string: str) -> dict:
+            def unpack(self, file_string: str) -> str:
+                """ Rips the header out of the file_string and return the remainder data as a dictionary """
+                return file_string.split(FILE_DATA_BULLET)[-1]
+
+            def decode(self, json_string: str) -> dict:
                 """ This method decode file text into a cls field dictionary
 
                 :returns: dictionary of field names mapped to their values recorded in the text """
-                file_string = file_string.split(FILE_DATA_BULLET)[-1]
-                data = json.loads(file_string)
-
+                data = json.loads(json_string)
                 type_matrix = self.__dict__
                 result_data = {}
                 for key, value in data.items():
@@ -112,7 +114,8 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 with open(obj.get_file(), "r") as file:
                     file_string = file.read()
 
-                data = obj.decode(file_string)
+                json_string = obj.unpack(file_string)
+                data = obj.decode(json_string)
                 obj.__dict__.update(data)
                 return obj
 
