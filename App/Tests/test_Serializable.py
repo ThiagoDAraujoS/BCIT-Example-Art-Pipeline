@@ -29,7 +29,8 @@ class TestSerializableClass(SetupBaseDirectory):
         cls.data = cls.instance.__dict__
 
     def test_decode(self):
-        data = self.instance.decode(self.file)
+        json_string = self.instance.unpack(self.file)
+        data = self.instance.decode(json_string)
         result = True
         for key, value in data.items():
             if self.data[key] == value:
