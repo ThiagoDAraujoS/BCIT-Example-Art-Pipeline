@@ -34,7 +34,7 @@ class TestSerializableDict(SetupBaseDirectory):
         self.assertListEqual(sorted(new_sdict.keys()), sorted(self.sdict.keys()), "After Test_Load_Folder, the dictionary has different keys")
 
     def test_print_names(self):
-        names = self.sdict.print_names()
+        names = self.sdict.get_element_names()
         self.assertListEqual(names, self.names, "Print Names does not return an accurate element names")
 
     def test_get_element_count(self):

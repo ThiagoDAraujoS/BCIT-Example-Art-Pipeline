@@ -52,10 +52,9 @@ class SerializableDict(dict):
 
             self[folder_name] = element
 
-    def print_names(self) -> list[str]:
+    def get_element_names(self) -> list[str]:
         """ Print the list of archived shows and return their name as a list """
         names = list(self.keys())
-        print(*names)
         return names
 
     def get_element_count(self) -> int:
