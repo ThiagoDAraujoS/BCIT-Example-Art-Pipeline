@@ -27,6 +27,9 @@ class TestSerializableDict(SetupBaseDirectory):
         self.sdict.create_element(new_name)
         self.assertTrue(new_name in self.sdict, "Created Element does not add its name to the SerializableDict")
         self.assertFalse(self.sdict[new_name] is None, "Create element does not map newly created objects to their names")
+        self.sdict.delete(new_name)
+        self.assertTrue(new_name not in self.sdict, "After deletion element still exists in dictionary")
+        self.assertFalse(os.path.exists(os.path.join(self.sdict._folder, new_name)), "Folder has not been deleted after element deletion")
 
     def test_load_folder(self):
         new_sdict: SerializableDict = SerializableDict(SerializableTestClass)
@@ -34,9 +37,9 @@ class TestSerializableDict(SetupBaseDirectory):
         self.assertListEqual(sorted(new_sdict.keys()), sorted(self.sdict.keys()), "After Test_Load_Folder, the dictionary has different keys")
 
     def test_print_names(self):
-        names = self.sdict.get_element_names()
+        names = self.sdict.get_names()
         self.assertListEqual(names, self.names, "Print Names does not return an accurate element names")
 
     def test_get_element_count(self):
-        count = self.sdict.get_element_count()
+        count = self.sdict.get_count()
         self.assertEqual(self.count, count, "Get Element Count does not return an accurate element count")

@@ -1,6 +1,8 @@
 import json
 import os
 from datetime import date, time
+from unittest import TestCase
+
 from App.Tests.test_setup import SetupBaseDirectory, SerializableTestClass, HEADER
 from App.ShowManager.Serializable import FILE_DATA_BULLET, NON_SERIALIZABLE_PREFIX
 
@@ -78,4 +80,9 @@ class TestSerializableClass(SetupBaseDirectory):
         self.instance.create_folder()
         self.assertTrue(os.path.exists(self.instance._folder), "Make directory did not create a directory")
         self.instance.set_folder(path)
+
+    def test_delete_folder(self):
+        folder_path = self.instance.get_folder()
+        self.instance.delete_folder()
+        self.assertFalse(os.path.exists(folder_path), "Folder still exists after deletion")
 
