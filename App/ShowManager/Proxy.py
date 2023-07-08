@@ -57,8 +57,9 @@ def get_show_data(show_name):
 @app.route('/shows/<show_name>', methods=['PUT'])
 def set_show_data(show_name):
     data = request.get_json()
-    json = data.get("data")
-    manager[show_name].decode(json)
+    json_string = data.get("data")
+    manager[show_name].decode(json_string)
+    manager[show_name].serialize()
     return jsonify(message='Show data updated successfully'), 200
 
 
@@ -91,6 +92,7 @@ def delete_shot(show_name, shot_name):
 @app.route('/shows/<show_name>/shots/<shot_name>', methods=['PUT'])
 def set_shot_data(show_name, shot_name):
     data = request.get_json()
-    json = data.get("data")
-    manager[show_name][shot_name].decode(json)
+    json_string = data.get("data")
+    manager[show_name][shot_name].decode(json_string)
+    manager[show_name][shot_name].serialize()
     return jsonify(message='Shot data updated successfully'), 200
