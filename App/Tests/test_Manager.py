@@ -1,6 +1,6 @@
 import os
 import shutil
-from App.ShowManager.Manager import Manager
+from App.ShowManager.Manager import Manager, InstallExitCode
 from App.Tests.test_setup import SetupBaseDirectory
 
 
@@ -25,41 +25,27 @@ class TestManager(SetupBaseDirectory):
     def setUp(self):
         super().setUp()
         self.manager: Manager = Manager()
-        self.was_overwrite_cb_triggered = False
-        """ Assertion variable used to check if install overwrite callback was performed """
-
-        self.was_folder_exists_cb_triggered = False
-        """ Assertion variable used to check if install folder exists callback was performed """
-
-    def on_overwrite(self, original_folder, *_):
-        self.assertEqual(self.test_company_path, original_folder, "On Overwrite argument is different than installed folder")
-        self.was_overwrite_cb_triggered = True
-
-    def on_folder_collision(self, collision_folder, *_):
-        self.assertEqual(self.test_company_path, collision_folder, "On Folder Collision argument is different than existing folder")
-        self.was_folder_exists_cb_triggered = True
 
     def test_overwrite(self):
         self.manager.install(self.test_company_path)
-        result = self.manager.install(self.test_company_path, self.on_overwrite, self.on_folder_collision)
-        self.assertTrue(self.was_overwrite_cb_triggered, "On overwrite callback not called when trying to install on a previously installed folder")
-        self.assertFalse(self.was_folder_exists_cb_triggered, "On folder collision called when installation overwrite was the problem")
-        self.assertEqual(result, 1, "Return code not 1 when installation met an overwrite case")
+        result = self.manager.install(self.test_company_path)
+        self.assertEqual(result, InstallExitCode.PROJECT_OVERRIDE, "Return code not 1 when installation met an overwrite case")
 
     def test_collision(self):
         os.mkdir(self.test_company_path)
-        result = self.manager.install(self.test_company_path, self.on_overwrite, self.on_folder_collision)
-        self.assertFalse(self.was_overwrite_cb_triggered, "On overwrite called when installation folder collision was the problem")
-        self.assertTrue(self.was_folder_exists_cb_triggered, "On folder collision callback not called when a folder was identified in the installation path")
-        self.assertEqual(result, 2, "Return code not 1 when installation met an overwrite case")
+        result = self.manager.install(self.test_company_path)
+        self.assertEqual(result, InstallExitCode.FOLDER_COLLISION, "Return code not 1 when installation met an overwrite case")
 
     def test_success(self):
-        self.manager.install(self.test_company_path, self.on_overwrite, self.on_folder_collision)
-        self.assertFalse(self.was_overwrite_cb_triggered, "On Overwrite called when installation was successful")
-        self.assertFalse(self.was_folder_exists_cb_triggered, "On folder collision called when installation was successful")
+        result_code = self.manager.install(self.test_company_path)
+        self.assertEqual(result_code, InstallExitCode.SUCCESS, "Result from a successful installation was not 0")
         self.assertEqual(self.manager._folder, self.test_company_path, "The folder required was not the same as targeted by the installation")
         self.assertTrue(os.path.exists(self.manager._folder), "The installation folder does not exists")
         self.assertTrue(self.manager.file_exists(), "The manager's meta file does not exist")
+
+    def test_path_broken(self):
+        result_code = self.manager.install("ERROR_1234567890_ERROR/ERROR_1234567890_ERROR")
+        self.assertEqual(result_code, InstallExitCode.PATH_BROKEN, "Returned code on install/path broken is not equal to InstallExitCode.PATH_BROKEN")
 
     def test_was_not_installed(self):
         self.assertFalse(self.manager.is_installed(), "is_installed returned true when the manager was not installed")
