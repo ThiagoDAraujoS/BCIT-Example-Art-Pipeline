@@ -52,13 +52,17 @@ class SerializableDict(dict):
 
             self[folder_name] = element
 
-    def get_element_names(self) -> list[str]:
+    def get_names(self) -> list[str]:
         """ Print the list of archived shows and return their name as a list """
         names = list(self.keys())
         return names
 
-    def get_element_count(self) -> int:
+    def get_count(self) -> int:
         return len(self)
 
-    def set_folder_path(self, folder_path: str):
+    def set_folder(self, folder_path: str):
         self._folder = folder_path
+
+    def delete(self, key: str):
+        self[key].delete_folder()
+        del self[key]
