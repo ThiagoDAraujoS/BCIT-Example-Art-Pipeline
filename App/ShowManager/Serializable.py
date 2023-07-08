@@ -37,36 +37,34 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                 print(data)
                 return data
 
-            def unpack(self, file_string: str) -> str:
+            @staticmethod
+            def unpack(file_string: str) -> str:
                 """ Rips the header out of the file_string and return the remainder data as a dictionary """
                 return file_string.split(FILE_DATA_BULLET)[-1]
 
-            def decode(self, json_string: str) -> dict:
-                """ This method decode file text into a cls field dictionary
-
-                :returns: dictionary of field names mapped to their values recorded in the text """
-                data = json.loads(json_string)
+            def decode(self, json_string: str):
+                """ This method decode file text into a cls field dictionary and apply the changes to this object """
                 type_matrix = self.__dict__
-                result_data = {}
-                for key, value in data.items():
+                data = {}
+                for key, value in json.loads(json_string).items():
                     if key not in type_matrix:
                         continue
 
                     if isinstance(type_matrix[key], time):
-                        result_data[key] = time.fromisoformat(value)
+                        data[key] = time.fromisoformat(value)
 
                     elif isinstance(type_matrix[key], date):
-                        result_data[key] = date.fromisoformat(value)
+                        data[key] = date.fromisoformat(value)
 
                     elif isinstance(type_matrix[key], set):
-                        result_data[key] = set(value)
+                        data[key] = set(value)
 
                     elif isinstance(type_matrix[key], tuple):
-                        result_data[key] = tuple(value)
+                        data[key] = tuple(value)
 
                     else:
-                        result_data[key] = value
-                return result_data
+                        data[key] = value
+                self.__dict__.update(data)
 
             def encode(self) -> str:
                 """ This method encodes objects fields into a file text
@@ -115,8 +113,7 @@ def serializable(header_text: str = "", meta_file_name: str = "data"):
                     file_string = file.read()
 
                 json_string = obj.unpack(file_string)
-                data = obj.decode(json_string)
-                obj.__dict__.update(data)
+                obj.decode(json_string)
                 return obj
 
             def get_folder(self):
