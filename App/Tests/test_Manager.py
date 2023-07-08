@@ -54,7 +54,8 @@ class TestManager(SetupBaseDirectory):
         self.assertEqual(result, 2, "Return code not 1 when installation met an overwrite case")
 
     def test_success(self):
-        self.manager.install(self.test_company_path, self.on_overwrite, self.on_folder_collision)
+        result_code = self.manager.install(self.test_company_path, self.on_overwrite, self.on_folder_collision)
+        self.assertTrue(result_code == 0, "Result from a successful installation was not 0")
         self.assertFalse(self.was_overwrite_cb_triggered, "On Overwrite called when installation was successful")
         self.assertFalse(self.was_folder_exists_cb_triggered, "On folder collision called when installation was successful")
         self.assertEqual(self.manager._folder, self.test_company_path, "The folder required was not the same as targeted by the installation")
