@@ -1,5 +1,4 @@
 import os
-import shutil
 
 from App.ShowManager.Serializable.SerializableDict import SerializableDict
 from App.ShowManager.Serializable.SerializableDecorator import serializable

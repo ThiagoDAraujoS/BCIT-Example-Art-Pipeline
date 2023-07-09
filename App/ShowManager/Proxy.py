@@ -1,5 +1,6 @@
 from flask import request, jsonify
 from ..app import *
+from App.ShowManager.Serializable.Serializable import BuildExitCode
 
 
 @app.route('/')
@@ -7,14 +8,23 @@ def test():
     return "hello world"
 
 
-@app.route('/install', methods=['POST'])
-def install():
-    """ TODO: ENSURE TO PASS THE CALLBACKS TO TREAT THINGS BREAKING """
+@app.route('/build', methods=['POST'])
+def build():
     data = request.get_json()
     folder = data.get('folder')
     manager.set_folder(folder)
-    manager.build()
-    return jsonify(message='Application installed successfully'), 200
+    exit_code = manager.build()
+    match exit_code:
+        case BuildExitCode.SUCCESS:
+            return jsonify(message='Application installed successfully!'), 200
+        case BuildExitCode.FOLDER_COLLISION:
+            return jsonify(message='Folder already exists on folder path location.'), 400
+        case BuildExitCode.PATH_BROKEN:
+            return jsonify(message='Folder path illegal.'), 401
+        case BuildExitCode.PROJECT_OVERRIDE:
+            return jsonify(message='Older project located on folder path.'), 402
+        case _:
+            return jsonify(message='An Error has occurred.'), 500
 
 
 @app.route('/load', methods=['POST'])
