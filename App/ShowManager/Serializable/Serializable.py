@@ -9,7 +9,7 @@ from .FolderManager import FolderManager
 FILE_DATA_BULLET: str = "\nDATA>>>\n"
 
 
-class InstallExitCode(Enum):
+class BuildExitCode(Enum):
     SUCCESS, PATH_BROKEN, PROJECT_OVERRIDE, FOLDER_COLLISION = 0, 1, 2, 3
 
 
@@ -27,20 +27,20 @@ class Serializable(Encodable, FolderManager):
         self._header = header
         self._file_name = f"{file_name}.meta"
 
-    def install(self) -> InstallExitCode:
+    def build(self) -> BuildExitCode:
         """ Sets the main folder path for tracking show files and generate a folder to receive such files. """
         if not os.path.exists(os.path.dirname(self._folder)):
-            return InstallExitCode.PATH_BROKEN
+            return BuildExitCode.PATH_BROKEN
 
         if os.path.exists(self._folder):
             if self.file_exists():
-                return InstallExitCode.PROJECT_OVERRIDE
+                return BuildExitCode.PROJECT_OVERRIDE
             else:
-                return InstallExitCode.FOLDER_COLLISION
+                return BuildExitCode.FOLDER_COLLISION
 
         self.create_folder()
         self.serialize()
-        return InstallExitCode.SUCCESS
+        return BuildExitCode.SUCCESS
 
     def serialize(self) -> None:
         """  Serialize the object to a file. """
@@ -70,7 +70,7 @@ class Serializable(Encodable, FolderManager):
         """ Check if the serialized file exists. """
         return path.exists(self.get_file())
 
-    def is_installed(self) -> bool:
+    def is_built(self) -> bool:
         return self.file_exists() and self.is_file_legal()
 
     def is_file_legal(self) -> bool:
