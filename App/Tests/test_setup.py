@@ -1,25 +1,6 @@
 import os
 import shutil
-from datetime import date, time
 from unittest import TestCase
-
-from App.ShowManager.Serializable import serializable
-
-HEADER = "HEADER"
-FILE = "test"
-
-
-@serializable(HEADER, FILE)
-class SerializableTestClass:
-    def __init__(self):
-        self.i: int = 1
-        self.f: float = 1.0
-        self.s: str = "string"
-        self.d: date = date(1, 1, 1)
-        self.t: time = time(1, 1, 1)
-        self.li: list = [1, 2, 3]
-        self.se: set = {1, 2, 3}
-        self.di: dict = {"1": 1, "2": 2, "3": 3}
 
 
 class SetupBaseDirectory(TestCase):

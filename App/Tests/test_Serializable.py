@@ -1,68 +1,62 @@
 import json
 import os
 from datetime import date, time
-from unittest import TestCase
 
-from App.Tests.test_setup import SetupBaseDirectory, SerializableTestClass, HEADER
-from App.ShowManager.Serializable import FILE_DATA_BULLET, NON_SERIALIZABLE_PREFIX
+from App.ShowManager.Serializable.Serializable import Serializable, FILE_DATA_BULLET, BuildExitCode
+from App.Tests.test_setup import SetupBaseDirectory
+
+HEADER = "HEADER"
+FILE = "test"
 
 
-class TestSerializableClass(SetupBaseDirectory):
+class SerializableTest(Serializable):
+    def __init__(self, folder, file_name, header):
+        super().__init__(folder, file_name, header)
+        self.a = 5
+        self.b = "name"
+
+
+class TestSerializable(SetupBaseDirectory):
     def setUp(self) -> None:
         super().setUp()
-        # build a serializable test object and fill it with non-default values
-        self.instance = SerializableTestClass()
-        self.instance.i = 2
-        self.instance.f = 2.0
-        self.instance.s = "string_2"
-        self.instance.d = date(2, 2, 2)
-        self.instance.t = time(2, 2, 2)
-        self.instance.li = [4, 5, 5]
-        self.instance.se = {4, 5, 5}
-        self.instance.di = {"4": 4, "5": 5, "6": 6}
+        self.folder_path = os.path.join(self.test_folder_path, "manager")
+        self.file_path = os.path.join(self.folder_path, f"{FILE}.meta")
+        self.instance = SerializableTest(self.folder_path, FILE, HEADER)
 
-        self.instance.set_folder(os.path.join(self.test_folder_path, "instance"))
-        self.instance.create_folder()
+        self.data = SerializableTest(self.folder_path, FILE, HEADER)
+        self.data.a = 10
+        self.data.b = "name2"
 
-        # Filter out any private field and save all fields in a self.data dictionary
-        self.data = {data: value for data, value in self.instance.__dict__.items() if not data.startswith(NON_SERIALIZABLE_PREFIX)}
-
-        # cast any unfriendly json type to a friendly json type
-        cast_data = self.data.copy()
-        cast_data["d"] = self.instance.d.isoformat()
-        cast_data["t"] = self.instance.t.isoformat()
-        cast_data["se"] = list(self.instance.se)
-
-        # convert the friendly data to json string in self.json
-        self.json = json.dumps(cast_data, indent=4)
-
-        # save the ideal full file string in self.file
+        self.json = json.dumps({"a": 10, "b": "name2"}, indent=4)
         self.file = f"{HEADER}{FILE_DATA_BULLET}{self.json}"
 
     def tearDown(self) -> None:
         self.instance.delete_folder()
         super().tearDown()
 
-    def test_decode(self):
-        test_obj = SerializableTestClass()
-        test_obj.decode(self.json)
+    def test_build_success(self):
+        self.assertEqual(self.instance.build(), BuildExitCode.SUCCESS, "Result from a successful installation was not 0")
+        self.assertEqual(self.instance.get_folder(), self.folder_path, "The folder required was not the same as targeted by the installation")
+        self.assertTrue(self.instance.folder_exists(), "The installation folder does not exists")
+        self.assertTrue(self.instance.file_exists(), "The manager's meta file does not exist")
 
-        result = True
-        for key, value in test_obj.__dict__.items():
-            if key.startswith(NON_SERIALIZABLE_PREFIX) or self.data[key] == value:
-                continue
-            result = False
-        self.assertTrue(result, "Not all fields set by decode are equal to the fields in original instance")
+    def test_build_overwrite(self):
+        self.instance.build()
+        self.assertEqual(self.instance.build(), BuildExitCode.PROJECT_OVERRIDE, "Return code not 1 when installation met an overwrite case")
 
-    def test_unpack(self):
-        self.assertEqual(SerializableTestClass.unpack(self.file), self.json, "method did not return a json string containing the objs data")
+    def test_build_collision(self):
+        os.mkdir(self.folder_path)
+        self.assertEqual(self.instance.build(), BuildExitCode.FOLDER_COLLISION, "Return code not 1 when installation met an overwrite case")
 
-    def test_encode(self):
-        result = self.instance.encode()
-        self.assertEqual(result, self.json, "Encoded dictionary, is not equal to file json")
+    def test_build_path_broken(self):
+        self.instance.set_folder("ERROR_1234567890_ERROR/ERROR_1234567890_ERROR")
+        self.assertEqual(self.instance.build(), BuildExitCode.PATH_BROKEN, "Returned code on install/path broken is not equal to InstallExitCode.PATH_BROKEN")
 
     def test_serialize_deserialize(self):
-        path = self.instance._folder
+        self.instance.build()
+        self.instance.a = self.data.a
+        self.instance.b = self.data.b
+
         self.instance.serialize()
         self.assertTrue(self.instance.file_exists(), "Serialized file does not exist")
 
@@ -70,18 +64,26 @@ class TestSerializableClass(SetupBaseDirectory):
             file_string = file.read()
 
         self.assertEqual(self.file, file_string, "file string is not equal to predictive file contents")
-        test = SerializableTestClass.deserialize(path)
+        test = SerializableTest(self.folder_path, FILE, HEADER)
+        test.deserialize()
         self.assertDictEqual(self.instance.__dict__, test.__dict__, "Deserialized object is not identical to original instance")
 
-    def test_create_folder(self):
-        path = self.instance._folder
-        new_path = os.path.join(path, "test")
-        self.instance.set_folder(new_path)
-        self.instance.create_folder()
-        self.assertTrue(os.path.exists(self.instance._folder), "Make directory did not create a directory")
+    def test_incorporate_file_data(self):
+        self.instance.incorporate_file_data(self.json)
+        self.assertDictEqual(self.instance.__dict__, self.data.__dict__, "Deserialized object is not identical to original instance")
 
-    def test_delete_folder(self):
-        folder_path = self.instance.get_folder()
-        self.instance.delete_folder()
-        self.assertFalse(os.path.exists(folder_path), "Folder still exists after deletion")
+    def test_compose_file_data(self):
+        json_string = self.data.compose_file_data()
+        self.assertEqual(json_string, self.file)
 
+    def test_get_file(self):
+        self.instance.build()
+        self.instance.serialize()
+        self.assertEqual(self.instance.get_file(), self.file_path)
+
+    def test_file_exists_built(self):
+        self.assertFalse(self.instance.file_exists())
+        self.assertFalse(self.instance.is_built())
+        self.instance.build()
+        self.assertTrue(self.instance.is_built())
+        self.assertTrue(self.instance.file_exists())
