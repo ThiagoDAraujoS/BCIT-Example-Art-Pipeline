@@ -11,7 +11,9 @@ class SerializableDict(dict, FolderManager):
 
     def __init__(self, value_type: Type, folder_path: str = ""):
         dict.__init__(self)
-        FolderManager.__init__(self, folder_path)
+        FolderManager.__init__(self)
+        if not self._folder:
+            self._folder = folder_path
         self._value_type: Type = value_type
 
     def create_element(self, name: str, *args, **kwargs) -> Type | None:

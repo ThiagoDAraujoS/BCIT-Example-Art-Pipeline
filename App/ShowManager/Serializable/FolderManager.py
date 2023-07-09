@@ -20,8 +20,9 @@ class FolderManager:
 
     def __init__(self, folder_path: str = ""):
         """Initialize a FolderManager object."""
-        if not self._folder:
-            self._folder = folder_path
+        try: self._folder
+        except AttributeError:
+            self._folder = folder_path if folder_path else ""
 
     def get_folder(self):
         """Get the path of the managed folder."""

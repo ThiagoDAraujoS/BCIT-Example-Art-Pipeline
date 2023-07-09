@@ -14,4 +14,3 @@ class Manager(SerializableDict):
     """ The Manager class handles the management of shows and their associated files """
     def __init__(self, folder=""):
         super().__init__(Show, folder)
-
