@@ -12,7 +12,8 @@ def install():
     """ TODO: ENSURE TO PASS THE CALLBACKS TO TREAT THINGS BREAKING """
     data = request.get_json()
     folder = data.get('folder')
-    manager.install(folder)
+    manager.set_folder(folder)
+    manager.build()
     return jsonify(message='Application installed successfully'), 200
 
 
@@ -21,7 +22,8 @@ def load():
     """ TODO: ENSURE TO PASS THE CALLBACKS TO TREAT THINGS BREAKING """
     data = request.get_json()
     folder = data.get('folder')
-    manager.load_folder(folder)
+    manager.set_folder(folder)
+    manager.load_from_folder()
     return jsonify(message='Application loaded successfully'), 200
 
 
