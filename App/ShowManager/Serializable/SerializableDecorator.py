@@ -7,10 +7,9 @@ def serializable(header_text: str = ""):
     def decorator(cls):
         class DecoratedClass(cls, Serializable):
             def __init__(self, folder="", *args, **kwargs):
-                self._folder = folder
-                Serializable.__init__(self,
-                                      file_name=f"{cls.__name__}",
-                                      header=header_text)
+                Serializable.__init__(self, folder_path=folder, file_name=f"{cls.__name__}", header=header_text)
+                if not self._folder:
+                    self._folder = folder
                 cls.__init__(self, *args, **kwargs)
 
         return DecoratedClass

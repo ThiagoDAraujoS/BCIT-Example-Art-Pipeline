@@ -20,9 +20,10 @@ class Serializable(Encodable, FolderManager):
         Encodable: Provides methods to encode and decode data from and to a JSON string.
         FolderManager: Manages a folder for storing the serialized file.
     """
-    def __init__(self, file_name: str = "", header: str = ""):
-        Encodable.__init__(self)
+    def __init__(self, folder_path: str = "", file_name: str = "", header: str = ""):
         FolderManager.__init__(self)
+        if not self._folder:
+            self._folder = folder_path
         self._header = header
         self._file_name = f"{file_name}.meta"
 
