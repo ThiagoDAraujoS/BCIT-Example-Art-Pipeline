@@ -1,5 +1,6 @@
 import os
 import shutil
+
 from App.ShowManager.Manager import Manager, InstallExitCode
 from App.Tests.test_setup import SetupBaseDirectory
 
