@@ -1,6 +1,6 @@
 import os
 import shutil
-from App.ShowManager.SerializableDict import SerializableDict
+from App.ShowManager.Serializable.SerializableDict import SerializableDict
 from App.Tests.test_setup import SetupBaseDirectory, SerializableTestClass
 
 

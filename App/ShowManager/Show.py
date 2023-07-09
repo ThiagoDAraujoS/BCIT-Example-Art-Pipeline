@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-from .Serializable import serializable
-from datetime import date, time
-from .Shot import Shot
-from .SerializableDict import SerializableDict
+from datetime import date
 
-FILE_NAME: str = "show"
+from .Serializable.SerializableDecorator import serializable
+from .Shot import Shot
+from .Serializable.SerializableDict import SerializableDict
+
 FILE_HEADER: str = """FILE CREATED BY: Thiago de Araujo Silva
 BCIT - British Columbia Institute of Technology
 Advanced Technical Arts Course
 This file contains serialized show information."""
 
 
-@serializable(FILE_HEADER, FILE_NAME)
+@serializable(FILE_HEADER)
 class Show(SerializableDict):
     """ A class representing a show """
     def __init__(self):

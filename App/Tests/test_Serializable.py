@@ -79,7 +79,6 @@ class TestSerializableClass(SetupBaseDirectory):
         self.instance.set_folder(new_path)
         self.instance.create_folder()
         self.assertTrue(os.path.exists(self.instance._folder), "Make directory did not create a directory")
-        self.instance.set_folder(path)
 
     def test_delete_folder(self):
         folder_path = self.instance.get_folder()
