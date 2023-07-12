@@ -2,8 +2,12 @@ from __future__ import annotations
 import os
 from os import path
 from typing import Type
-
+from enum import Enum
 from .FolderManager import FolderManager
+
+
+class CreateElementExitCode(Enum):
+    SUCCESS, NO_NAME_PROVIDED, ELEMENT_EXISTS, CREATION_ERROR = 0, 1, 2, 3
 
 
 class SerializableDict(dict, FolderManager):
@@ -16,23 +20,23 @@ class SerializableDict(dict, FolderManager):
             self._folder = folder_path
         self._value_type: Type = value_type
 
-    def create_element(self, name: str, *args, **kwargs) -> Type | None:
+    def create_element(self, name: str, *args, **kwargs) -> CreateElementExitCode:
         element_folder = path.normpath(path.join(self._folder, name))
 
         if not name:
-            raise Exception("Element name must be provided")
+            return CreateElementExitCode.NO_NAME_PROVIDED
 
         if name in self:
-            element = self[name]
-            if element.is_file_legal():
-                return None
+            return CreateElementExitCode.ELEMENT_EXISTS
 
-        element = self._value_type(*args, **kwargs)
+        try: element = self._value_type(*args, **kwargs)
+        except: return CreateElementExitCode.CREATION_ERROR
+
         element.set_folder(element_folder)
         element.create_folder()
         element.serialize()
         self[name] = element
-        return element
+        return CreateElementExitCode.SUCCESS
 
     def load_from_folder(self, perform_recursive_load: bool = True) -> None:
         perform_recursive_load &= issubclass(self._value_type, SerializableDict)
