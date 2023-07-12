@@ -23,10 +23,11 @@ class SerializableDict(dict, FolderManager):
         dict.__init__(self)
         FolderManager.__init__(self)
         if not self._folder:
-            self._folder = folder_path
+            self._folder = path.normpath(folder_path)
         self._value_type: Type = value_type
 
     def create_element(self, name: str, *args, **kwargs) -> CreateElementExitCode:
+        """ Create an element in the dictionary, then build a folder and metafile for said element. """
         element_folder = path.normpath(path.join(self._folder, name))
 
         if not name:
@@ -45,6 +46,7 @@ class SerializableDict(dict, FolderManager):
         return CreateElementExitCode.SUCCESS
 
     def load_from_folder(self, perform_recursive_load: bool = True) -> LoadFromFolderExitCode:
+        """ Load a folder's contents and deserialize all metafiles corresponding to this dictionary's _value_type"""
         perform_recursive_load &= issubclass(self._value_type, SerializableDict)
 
         if not self.folder_exists():
@@ -73,8 +75,10 @@ class SerializableDict(dict, FolderManager):
         return LoadFromFolderExitCode.SUCCESS
 
     def get_names(self) -> list[str]:
+        """ Get a list of elements names stored in this dictionary """
         return list(self.keys())
 
     def delete(self, key: str):
+        """ Delete an element from the dictionary and its folder """
         self[key].delete_folder()
         del self[key]
