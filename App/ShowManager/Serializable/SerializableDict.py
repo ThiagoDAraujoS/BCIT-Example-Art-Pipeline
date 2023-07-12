@@ -1,13 +1,19 @@
 from __future__ import annotations
 import os
+import warnings
 from os import path
 from typing import Type
 from enum import Enum
 from .FolderManager import FolderManager
+from .Serializable import Serializable
 
 
 class CreateElementExitCode(Enum):
     SUCCESS, NO_NAME_PROVIDED, ELEMENT_EXISTS, CREATION_ERROR = 0, 1, 2, 3
+
+
+class LoadFromFolderExitCode(Enum):
+    SUCCESS, NO_FOLDER_FOUND = 0, 1
 
 
 class SerializableDict(dict, FolderManager):
@@ -38,8 +44,11 @@ class SerializableDict(dict, FolderManager):
         self[name] = element
         return CreateElementExitCode.SUCCESS
 
-    def load_from_folder(self, perform_recursive_load: bool = True) -> None:
+    def load_from_folder(self, perform_recursive_load: bool = True) -> LoadFromFolderExitCode:
         perform_recursive_load &= issubclass(self._value_type, SerializableDict)
+
+        if not self.folder_exists():
+            return LoadFromFolderExitCode.NO_FOLDER_FOUND
 
         self.clear()
         for folder_name in os.listdir(self._folder):
@@ -50,15 +59,18 @@ class SerializableDict(dict, FolderManager):
 
             try:
                 element = self._value_type(path_to_folder)
-                element.deserialize()
+                if element.file_exists():
+                    element.deserialize()
             except:
-                print(f"Error on deserializing {path_to_folder}")
+                warnings.warn(f"Error on deserializing {path_to_folder}")
                 continue
+
+            self[folder_name] = element
 
             if perform_recursive_load:
                 element.load_from_folder()
 
-            self[folder_name] = element
+        return LoadFromFolderExitCode.SUCCESS
 
     def get_names(self) -> list[str]:
         return list(self.keys())

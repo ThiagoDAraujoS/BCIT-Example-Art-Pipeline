@@ -52,4 +52,3 @@ class Encodable:
 
             data[key] = value
         return json.dumps(data, indent=4)
-

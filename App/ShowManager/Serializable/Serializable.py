@@ -23,7 +23,7 @@ class Serializable(Encodable, FolderManager):
     def __init__(self, folder_path: str = "", file_name: str = "", header: str = ""):
         FolderManager.__init__(self)
         if not self._folder:
-            self._folder = folder_path
+            self._folder = path.normpath(folder_path)
         self._header = header
         self._file_name = f"{file_name}.meta"
 
@@ -64,7 +64,7 @@ class Serializable(Encodable, FolderManager):
 
     def get_file(self) -> str:
         """ Get the full path of the serialized file. """
-        return path.normpath(path.join(self._folder, self._file_name))
+        return path.join(self._folder, self._file_name)
 
     def file_exists(self) -> bool:
         """ Check if the serialized file exists. """

@@ -28,5 +28,3 @@ class Show(SerializableDict):
         self.certification: dict[str, str] = {}
         self.release: date = date(1, 1, 1)
         self.countries_of_origin: set[str] = set()
-
-
