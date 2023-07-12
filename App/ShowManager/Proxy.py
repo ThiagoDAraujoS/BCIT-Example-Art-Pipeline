@@ -1,5 +1,6 @@
 from .Manager import Manager
 from .Serializable.Serializable import BuildExitCode
+from .Serializable.SerializableDict import CreateElementExitCode, LoadFromFolderExitCode
 
 manager = Manager()
 
@@ -20,8 +21,11 @@ def install(folder: str) -> int:
 
 def load(folder: str) -> None:
     manager.set_folder(folder)
-    manager.load_from_folder()
-    print(f"Project at {folder} loaded successfully")
+    exit_code = manager.load_from_folder()
+    if exit_code == LoadFromFolderExitCode.NO_FOLDER_FOUND:
+        print(f"Folder at {folder} not found")
+    elif exit_code == LoadFromFolderExitCode.SUCCESS:
+        print(f"Project at {folder} loaded successfully")
 
 
 def get_shows_list() -> list[str]:
@@ -31,7 +35,15 @@ def get_shows_list() -> list[str]:
 
 
 def create_show(show_name: str) -> None:
-    manager.create_element(show_name)
+    exit_code = manager.create_element(show_name)
+    if exit_code == CreateElementExitCode.SUCCESS:
+        print(f"Show {show_name} created successfully.")
+    elif exit_code == CreateElementExitCode.ELEMENT_EXISTS:
+        print(f"Show {show_name} already present in folder.")
+    elif exit_code == CreateElementExitCode.NO_NAME_PROVIDED:
+        print(f"No show name provided.")
+    elif exit_code == CreateElementExitCode.CREATION_ERROR:
+        print(f"Error has happened while instantiating a show object")
 
 
 def delete_show(show_name: str) -> None:
@@ -54,7 +66,15 @@ def get_shot_list(show_name):
 
 
 def create_shot(show_name: str, shot_name: str):
-    manager[show_name].create_element(shot_name)
+    exit_code = manager[show_name].create_element(shot_name)
+    if exit_code == CreateElementExitCode.SUCCESS:
+        print(f"Shot {shot_name} created successfully.")
+    elif exit_code == CreateElementExitCode.ELEMENT_EXISTS:
+        print(f"Shot {shot_name} already present in folder.")
+    elif exit_code == CreateElementExitCode.NO_NAME_PROVIDED:
+        print(f"No shot name provided.")
+    elif exit_code == CreateElementExitCode.CREATION_ERROR:
+        print(f"Error has happened while instantiating a shot object")
 
 
 def get_shot_data(show_name, shot_name):
