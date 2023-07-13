@@ -50,8 +50,8 @@ def delete_show(show_name: str) -> None:
     manager.delete(show_name)
 
 
-def get_show_data(show_name: str) -> dict[str, object]:
-    return manager[show_name]
+def get_show_data(show_name: str) -> str:
+    return manager[show_name].encode()
 
 
 def set_show_data(show_name: str, data: dict[str, object]):
@@ -77,14 +77,14 @@ def create_shot(show_name: str, shot_name: str):
         print(f"Error has happened while instantiating a shot object")
 
 
-def get_shot_data(show_name, shot_name):
-    return manager[show_name][shot_name]
+def get_shot_data(show_name, shot_name) -> str:
+    return manager[show_name][shot_name].encode()
 
 
 def delete_shot(show_name, shot_name):
     manager[show_name].delete(shot_name)
 
 
-def set_shot_data(show_name, shot_name, data: str):
+def set_shot_data(show_name, shot_name, data: dict[str, object]):
     manager[show_name][shot_name].__dict__.update(data)
     manager[show_name][shot_name].serialize()
