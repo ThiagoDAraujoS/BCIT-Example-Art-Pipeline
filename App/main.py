@@ -4,19 +4,18 @@ import os
 import ast
 import json
 from enum import Enum
-from typing import Callable
 
 from rich import print
 from rich import box
-from rich.table   import Table
+from rich.table import Table
 from rich.console import Console, Group
-from rich.panel   import Panel
-from rich.prompt  import Prompt, Confirm
-from rich.tree    import Tree
+from rich.panel import Panel
+from rich.prompt import Prompt, Confirm
+from rich.tree import Tree
 
 from App.ShowManager.Proxy import *
-from App.ShowManager.Shot  import Shot
-from App.ShowManager.Show  import Show
+from App.ShowManager.Shot import Shot
+from App.ShowManager.Show import Show
 
 
 class State(Enum):
@@ -26,6 +25,7 @@ class State(Enum):
 
 class Command:
     """ This class defines a command object, each command contains a code and a set of arguments, with those I can deduce what the user wanted to do with my application """
+
     def __init__(self, code, description, *arguments: str):
         self.code: str = code
         """ The command's keyword code """
@@ -151,7 +151,7 @@ def draw_element_list(elements: list[str], default_message, root_name) -> str | 
 
 
 def state_landing() -> State:
-    """ First state of UI's state machine, it's the landing view when the application starts """
+    """ First state of UIs state machine, it's the landing view when the application starts """
     global project_name, folder_path
 
     has_folder_message = f"Path to {folder_path} loaded.\n\nPlease provide a new folder path or press enter to accept this folder.\nThen provide a project name."
