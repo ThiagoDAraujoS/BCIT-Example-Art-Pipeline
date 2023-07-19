@@ -78,9 +78,8 @@ def get_show_data(show_name):
 
 @app.route('/shows/<show_name>', methods=['PUT'])
 def set_show_data(show_name):
-    data = request.get_json()
-    json_string = data.get("data")
-    manager[show_name].decode(json_string)
+    data = request.get_data()
+    manager[show_name].decode(data)
     manager[show_name].serialize()
     return jsonify(message='Show data updated successfully'), 200
 

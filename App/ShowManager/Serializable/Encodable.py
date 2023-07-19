@@ -1,5 +1,6 @@
 import json
 from datetime import date, time
+from typing import Any
 
 NON_SERIALIZABLE_PREFIX: str = "_"
 """ Prefix used to indicate that a field should not be serialized when encoding an object into a JSON string. """
@@ -13,12 +14,17 @@ class Encodable:
         encode() -> str: Encode the object's fields into a JSON string.
     """
 
-    def decode(self, json_string: str) -> None:
+    def decode(self, input_data: str | dict[str:Any]) -> None:
+        print(input_data)
         """ Decode the JSON string into the object's fields. """
+        if isinstance(input_data, str):
+            input_data = str(input_data).replace("\r", "").replace("\n", "")
+            print(input_data)
+            input_data = json.loads(input_data)
         type_matrix = self.__dict__
         data = {}
-        for key, value in json.loads(json_string).items():
-            if key not in type_matrix:
+        for key, value in input_data.items():
+            if key not in type_matrix or value is None:
                 continue
 
             if isinstance(type_matrix[key], time):
