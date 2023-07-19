@@ -1,5 +1,5 @@
 from flask import request, jsonify
-from ..app import *
+from app import *
 from App.ShowManager.Serializable.Serializable import BuildExitCode
 
 

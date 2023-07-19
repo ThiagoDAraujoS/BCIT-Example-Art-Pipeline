@@ -17,8 +17,6 @@ class Show(SerializableDict):
     """ A class representing a show """
     def __init__(self):
         super().__init__(Shot)
-
-        self.name: str = ""
         self.rating: int = 0
         self.popularity_score: int = 0
         self.type: str = "tv_series"

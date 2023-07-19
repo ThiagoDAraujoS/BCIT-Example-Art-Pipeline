@@ -1,0 +1,17 @@
+services:
+
+  pipeline_project:
+
+    restart: always
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./:/pipeline/
+    networks:
+      - pipeline_backend
+
+networks:
+  pipeline_backend:
