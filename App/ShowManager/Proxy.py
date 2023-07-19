@@ -1,22 +1,30 @@
 from flask import request, jsonify
 from ..app import *
 from App.ShowManager.Serializable.Serializable import BuildExitCode
-
+import os
 
 @app.route('/')
 def test():
     return "hello world"
 
 
+@app.route('/projects', methods=['GET'])
+def get_projects():
+    projects = manager.deserialize_bookkeeper()
+    return jsonify(projects), 200
+
+
 @app.route('/build', methods=['POST'])
 def build():
     data = request.get_json()
+    name = data.get("name")
     folder = data.get('folder')
-    manager.set_folder(folder)
-    exit_code = manager.build()
+
+    exit_code = manager.build(name, folder)
+
     match exit_code:
         case BuildExitCode.SUCCESS:
-            return jsonify(message='Application installed successfully!'), 200
+            return jsonify(message='Project built successfully!'), 200
         case BuildExitCode.FOLDER_COLLISION:
             return jsonify(message='Folder already exists on folder path location.'), 400
         case BuildExitCode.PATH_BROKEN:
@@ -31,8 +39,10 @@ def build():
 def load():
     """ TODO: ENSURE TO PASS THE CALLBACKS TO TREAT THINGS BREAKING """
     data = request.get_json()
-    folder = data.get('folder')
-    manager.set_folder(folder)
+    folder = data.get('name')
+
+    book = manager.deserialize_bookkeeper()
+    manager.set_folder(book[folder])
     manager.load_from_folder()
     return jsonify(message='Application loaded successfully'), 200
 
@@ -85,7 +95,7 @@ def get_shot_list(show_name):
 def create_shot(show_name):
     data = request.get_json()
     name = data.get("name")
-    manager[show_name].create_element(name)
+    manager[show_name].create_element()
     return jsonify(message='Shot created successfully'), 201
 
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 import os
 from os import path
-from typing import Type
+from typing import Type, Any
 
 from .FolderManager import FolderManager
 
@@ -16,7 +16,7 @@ class SerializableDict(dict, FolderManager):
             self._folder = folder_path
         self._value_type: Type = value_type
 
-    def create_element(self, name: str, *args, **kwargs) -> Type | None:
+    def create_element(self, name: str, *args, **kwargs) -> tuple[str, str, Any] | None:
         element_folder = path.normpath(path.join(self._folder, name))
 
         if not name:
@@ -32,7 +32,7 @@ class SerializableDict(dict, FolderManager):
         element.create_folder()
         element.serialize()
         self[name] = element
-        return element
+        return element_folder, name, element
 
     def load_from_folder(self, perform_recursive_load: bool = True) -> None:
         perform_recursive_load &= issubclass(self._value_type, SerializableDict)
