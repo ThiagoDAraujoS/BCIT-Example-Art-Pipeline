@@ -15,11 +15,8 @@ class Encodable:
     """
 
     def decode(self, input_data: str | dict[str:Any]) -> None:
-        print(input_data)
         """ Decode the JSON string into the object's fields. """
         if isinstance(input_data, str):
-            input_data = str(input_data).replace("\r", "").replace("\n", "")
-            print(input_data)
             input_data = json.loads(input_data)
         type_matrix = self.__dict__
         data = {}

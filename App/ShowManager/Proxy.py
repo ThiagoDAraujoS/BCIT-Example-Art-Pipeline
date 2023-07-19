@@ -1,21 +1,24 @@
 from flask import request, jsonify
 from ..app import *
 from App.ShowManager.Serializable.Serializable import BuildExitCode
-import os
+
 
 @app.route('/')
 def test():
     return "hello world"
 
 
-@app.route('/projects', methods=['GET'])
-def get_projects():
+# ---------------------------PROJECT CALLS-----------------------------------
+
+
+@app.route('/project', methods=['GET'])
+def get_project_names():
     projects = manager.deserialize_bookkeeper()
     return jsonify(projects), 200
 
 
 @app.route('/build', methods=['POST'])
-def build():
+def build_new_project():
     data = request.get_json()
     name = data.get("name")
     folder = data.get('folder')
@@ -35,8 +38,8 @@ def build():
             return jsonify(message='An Error has occurred.'), 500
 
 
-@app.route('/load', methods=['POST'])
-def load():
+@app.route('/project', methods=['POST'])
+def load_project():
     """ TODO: ENSURE TO PASS THE CALLBACKS TO TREAT THINGS BREAKING """
     data = request.get_json()
     folder = data.get('name')
@@ -47,15 +50,18 @@ def load():
     return jsonify(message='Application loaded successfully'), 200
 
 
+# ---------------------------SHOW CALLS-----------------------------------
+
+
 @app.route('/shows', methods=['GET'])
-def get_show_list():
+def get_show_names():
     """ TODO: TREAT SHOW_NAME NOT EXISTING CATCH"""
     show_name_list = manager.get_names()
     return jsonify(show_name_list), 200
 
 
 @app.route('/shows', methods=['POST'])
-def create_show():
+def create_new_show():
     """ TODO: IMPLEMENT ON ELEMENT EXIST CATCH """
     data = request.get_json()
     name = data.get("name")
@@ -78,30 +84,33 @@ def get_show_data(show_name):
 
 @app.route('/shows/<show_name>', methods=['PUT'])
 def set_show_data(show_name):
-    data = request.get_data()
+    data = request.data.decode('utf-8')
     manager[show_name].decode(data)
     manager[show_name].serialize()
     return jsonify(message='Show data updated successfully'), 200
 
 
+# ---------------------------SHOT CALLS-----------------------------------
+
+
 @app.route('/shows/<show_name>/shots', methods=['GET'])
-def get_shot_list(show_name):
+def get_shot_names(show_name):
     shot_list = manager[show_name].get_names()
     return jsonify(shot_list), 200
 
 
 @app.route('/shows/<show_name>/shots', methods=['POST'])
-def create_shot(show_name):
+def create_new_shot(show_name):
     data = request.get_json()
     name = data.get("name")
-    manager[show_name].create_element()
+    manager[show_name].create_element(name)
     return jsonify(message='Shot created successfully'), 201
 
 
 @app.route('/shows/<show_name>/shots/<shot_name>', methods=['GET'])
 def get_shot_data(show_name, shot_name):
     shot_data = manager[show_name][shot_name].encode()
-    return jsonify(shot_data), 200
+    return shot_data, 200
 
 
 @app.route('/shows/<show_name>/shots/<shot_name>', methods=['DELETE'])
@@ -112,8 +121,7 @@ def delete_shot(show_name, shot_name):
 
 @app.route('/shows/<show_name>/shots/<shot_name>', methods=['PUT'])
 def set_shot_data(show_name, shot_name):
-    data = request.get_json()
-    json_string = data.get("data")
-    manager[show_name][shot_name].decode(json_string)
+    data = request.data.decode('utf-8')
+    manager[show_name][shot_name].decode(data)
     manager[show_name][shot_name].serialize()
-    return jsonify(message='Shot data updated successfully'), 200
+    return jsonify(message='Show data updated successfully'), 200
