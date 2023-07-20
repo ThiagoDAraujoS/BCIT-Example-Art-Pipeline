@@ -14,7 +14,7 @@ def test():
 @app.route('/project', methods=['GET'])
 def get_project_names():
     projects = manager.deserialize_bookkeeper()
-    return jsonify(projects), 200
+    return projects, 200
 
 
 @app.route('/build', methods=['POST'])
@@ -47,7 +47,16 @@ def load_project():
     book = manager.deserialize_bookkeeper()
     manager.set_folder(book[folder])
     manager.load_from_folder()
-    return jsonify(message='Application loaded successfully'), 200
+
+    show_name_list = manager.get_names()
+    return jsonify(show_name_list), 200
+
+
+@app.route('/project', methods=['DELETE'])
+def delete_project():
+    data = request.get_json()
+    name = data.get('name')
+    manager.delete_project(name)
 
 
 # ---------------------------SHOW CALLS-----------------------------------

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 import json
+import shutil
 
 from .Show import Show
 from .Serializable.SerializableDecorator import serializable
@@ -37,6 +38,14 @@ class Manager(SerializableDict):
     def _serialize_bookkeeper(self, data):
         with open(self._bookkeeper_file, "w") as file:
             file.write(json.dumps(data, indent=4))
+
+    def delete_project(self, name):
+        book = self.deserialize_bookkeeper()
+        if name in book:
+            path = book[name]
+            shutil.rmtree(path)
+            book.pop(name)
+            self._serialize_bookkeeper(book)
 
     def _book_project(self, name, path):
         book = self.deserialize_bookkeeper()
