@@ -1,110 +1,90 @@
-from flask import request, jsonify
-from ..app import *
-from App.ShowManager.Serializable.Serializable import BuildExitCode
+from .Manager import Manager
+from .Serializable.Serializable import BuildExitCode
+from .Serializable.SerializableDict import CreateElementExitCode, LoadFromFolderExitCode
+
+manager = Manager()
 
 
-@app.route('/')
-def test():
-    return "hello world"
-
-
-@app.route('/build', methods=['POST'])
-def build():
-    data = request.get_json()
-    folder = data.get('folder')
+def install(folder: str) -> int:
     manager.set_folder(folder)
     exit_code = manager.build()
-    match exit_code:
-        case BuildExitCode.SUCCESS:
-            return jsonify(message='Application installed successfully!'), 200
-        case BuildExitCode.FOLDER_COLLISION:
-            return jsonify(message='Folder already exists on folder path location.'), 400
-        case BuildExitCode.PATH_BROKEN:
-            return jsonify(message='Folder path illegal.'), 401
-        case BuildExitCode.PROJECT_OVERRIDE:
-            return jsonify(message='Older project located on folder path.'), 402
-        case _:
-            return jsonify(message='An Error has occurred.'), 500
+    if exit_code == BuildExitCode.SUCCESS:
+        print("Installed Successfully")
+    elif exit_code == BuildExitCode.FOLDER_COLLISION:
+        print("Folder path not empty")
+    elif exit_code == BuildExitCode.PROJECT_OVERRIDE:
+        print("A project already exists in folder path")
+    else:
+        print("An error has occurred")
+    return exit_code.value
 
 
-@app.route('/load', methods=['POST'])
-def load():
-    """ TODO: ENSURE TO PASS THE CALLBACKS TO TREAT THINGS BREAKING """
-    data = request.get_json()
-    folder = data.get('folder')
+def load(folder: str) -> None:
     manager.set_folder(folder)
-    manager.load_from_folder()
-    return jsonify(message='Application loaded successfully'), 200
+    exit_code = manager.load_from_folder()
+    if exit_code == LoadFromFolderExitCode.NO_FOLDER_FOUND:
+        print(f"Folder at {folder} not found")
+    elif exit_code == LoadFromFolderExitCode.SUCCESS:
+        print(f"Project at {folder} loaded successfully")
 
 
-@app.route('/shows', methods=['GET'])
-def get_show_list():
-    """ TODO: TREAT SHOW_NAME NOT EXISTING CATCH"""
-    show_name_list = manager.get_names()
-    return jsonify(show_name_list), 200
+def get_shows_list() -> list[str]:
+    show_list = manager.get_names()
+    print(f"This are the saved shows, ", show_list)
+    return show_list
 
 
-@app.route('/shows', methods=['POST'])
-def create_show():
-    """ TODO: IMPLEMENT ON ELEMENT EXIST CATCH """
-    data = request.get_json()
-    name = data.get("name")
-    manager.create_element(name)
-    return jsonify(message='Show created successfully'), 201
+def create_show(show_name: str) -> None:
+    exit_code = manager.create_element(show_name)
+    if exit_code == CreateElementExitCode.SUCCESS:
+        print(f"Show {show_name} created successfully.")
+    elif exit_code == CreateElementExitCode.ELEMENT_EXISTS:
+        print(f"Show {show_name} already present in folder.")
+    elif exit_code == CreateElementExitCode.NO_NAME_PROVIDED:
+        print(f"No show name provided.")
+    elif exit_code == CreateElementExitCode.CREATION_ERROR:
+        print(f"Error has happened while instantiating a show object")
 
 
-@app.route('/shows/<show_name>', methods=['DELETE'])
-def delete_show(show_name):
+def delete_show(show_name: str) -> None:
     manager.delete(show_name)
-    return jsonify(message='Shot deleted successfully'), 200
 
 
-@app.route('/shows/<show_name>', methods=['GET'])
-def get_show_data(show_name):
-    """ TODO: TREAT SHOW_NAME NOT EXISTING CATCH"""
-    show_data = manager[show_name].encode()
-    return show_data, 200
+def get_show_data(show_name: str) -> str:
+    return manager[show_name].encode()
 
 
-@app.route('/shows/<show_name>', methods=['PUT'])
-def set_show_data(show_name):
-    data = request.get_json()
-    json_string = data.get("data")
-    manager[show_name].decode(json_string)
+def set_show_data(show_name: str, data: dict[str, object]):
+    manager[show_name].__dict__.update(data)
     manager[show_name].serialize()
-    return jsonify(message='Show data updated successfully'), 200
 
 
-@app.route('/shows/<show_name>/shots', methods=['GET'])
 def get_shot_list(show_name):
     shot_list = manager[show_name].get_names()
-    return jsonify(shot_list), 200
+    print(shot_list)
+    return shot_list
 
 
-@app.route('/shows/<show_name>/shots', methods=['POST'])
-def create_shot(show_name):
-    data = request.get_json()
-    name = data.get("name")
-    manager[show_name].create_element(name)
-    return jsonify(message='Shot created successfully'), 201
+def create_shot(show_name: str, shot_name: str):
+    exit_code = manager[show_name].create_element(shot_name)
+    if exit_code == CreateElementExitCode.SUCCESS:
+        print(f"Shot {shot_name} created successfully.")
+    elif exit_code == CreateElementExitCode.ELEMENT_EXISTS:
+        print(f"Shot {shot_name} already present in folder.")
+    elif exit_code == CreateElementExitCode.NO_NAME_PROVIDED:
+        print(f"No shot name provided.")
+    elif exit_code == CreateElementExitCode.CREATION_ERROR:
+        print(f"Error has happened while instantiating a shot object")
 
 
-@app.route('/shows/<show_name>/shots/<shot_name>', methods=['GET'])
-def get_shot_data(show_name, shot_name):
-    shot_data = manager[show_name][shot_name].encode()
-    return jsonify(shot_data), 200
+def get_shot_data(show_name, shot_name) -> str:
+    return manager[show_name][shot_name].encode()
 
 
-@app.route('/shows/<show_name>/shots/<shot_name>', methods=['DELETE'])
 def delete_shot(show_name, shot_name):
     manager[show_name].delete(shot_name)
-    return jsonify(message='Shot deleted successfully'), 200
 
 
-@app.route('/shows/<show_name>/shots/<shot_name>', methods=['PUT'])
-def set_shot_data(show_name, shot_name):
-    data = request.get_json()
-    json_string = data.get("data")
-    manager[show_name][shot_name].decode(json_string)
+def set_shot_data(show_name, shot_name, data: dict[str, object]):
+    manager[show_name][shot_name].__dict__.update(data)
     manager[show_name][shot_name].serialize()
-    return jsonify(message='Shot data updated successfully'), 200
