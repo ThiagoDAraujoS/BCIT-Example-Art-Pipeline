@@ -31,9 +31,9 @@ def build_new_project():
         case BuildExitCode.FOLDER_COLLISION:
             return jsonify(message='Folder already exists on folder path location.'), 400
         case BuildExitCode.PATH_BROKEN:
-            return jsonify(message='Folder path illegal.'), 401
+            return jsonify(message='Folder path illegal.'), 400
         case BuildExitCode.PROJECT_OVERRIDE:
-            return jsonify(message='Older project located on folder path.'), 402
+            return jsonify(message='Older project located on folder path.'), 400
         case _:
             return jsonify(message='An Error has occurred.'), 500
 
@@ -52,11 +52,10 @@ def load_project():
     return jsonify(show_name_list), 200
 
 
-@app.route('/project', methods=['DELETE'])
-def delete_project():
-    data = request.get_json()
-    name = data.get('name')
-    manager.delete_project(name)
+@app.route('/project/<project_name>', methods=['DELETE'])
+def delete_project(project_name):
+    manager.delete_project(project_name)
+    return jsonify(message='Project deleted'), 200
 
 
 # ---------------------------SHOW CALLS-----------------------------------
@@ -75,7 +74,7 @@ def create_new_show():
     data = request.get_json()
     name = data.get("name")
     manager.create_element(name)
-    return jsonify(message='Show created successfully'), 201
+    return jsonify(message='Show created successfully'), 200
 
 
 @app.route('/shows/<show_name>', methods=['DELETE'])
@@ -99,7 +98,7 @@ def set_show_data(show_name):
     return jsonify(message='Show data updated successfully'), 200
 
 
-# ---------------------------SHOT CALLS-----------------------------------
+# |---------------------------SHOT CALLS-----------------------------------|
 
 
 @app.route('/shows/<show_name>/shots', methods=['GET'])
@@ -113,7 +112,7 @@ def create_new_shot(show_name):
     data = request.get_json()
     name = data.get("name")
     manager[show_name].create_element(name)
-    return jsonify(message='Shot created successfully'), 201
+    return jsonify(message='Shot created successfully'), 200
 
 
 @app.route('/shows/<show_name>/shots/<shot_name>', methods=['GET'])
