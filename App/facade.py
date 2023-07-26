@@ -1,4 +1,4 @@
-from .Manager import Manager
+from .manager import Manager
 from .Serializable.Serializable import BuildExitCode
 from .Serializable.SerializableDict import CreateElementExitCode, LoadFromFolderExitCode
 

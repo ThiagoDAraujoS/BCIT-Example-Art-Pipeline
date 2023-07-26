@@ -1,7 +1,7 @@
 from datetime import datetime, date, time
 from typing import Set, Dict
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json  # LetterCase, Undefined
+from dataclasses_json import dataclass_json
 
 
 @dataclass_json
