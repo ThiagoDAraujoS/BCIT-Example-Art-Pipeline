@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .data import *
 from .folder import Folder
+from .save_file import SaveFile
 
 from uuid import UUID
 from uuid import uuid4 as generate_uuid
@@ -15,20 +16,7 @@ class AssetManager:
         self.library: Library = Library()
         """library (Library): A dictionary-like object that stores the assets."""
 
-    def get_by_name(self, asset_name: str) -> UUID | None:
-        """
-        Get the UUID of an asset by its name.
-
-        Args:
-            asset_name (str): The name of the asset to look for.
-
-        Returns:
-            UUID | None: The UUID of the asset if found, or None if not found.
-        """
-        for uuid, asset in self.library.items():
-            if asset.name == asset_name:
-                return uuid
-        return None
+        self.load()
 
     def create(self, asset_name: str = "", asset_type: str = "") -> UUID:
         """
@@ -50,6 +38,7 @@ class AssetManager:
         self.library[uuid] = ASSET_TYPES.get(asset_type, Asset)(asset_name, asset_type)
         self.folder.create_subfolder(folder_name)
         self.folder.open_folder_in_explorer(folder_name)
+        self.save()
         return uuid
 
     def remove(self, asset_uuid: UUID):
@@ -60,7 +49,8 @@ class AssetManager:
             asset_uuid (UUID): The UUID of the asset to remove.
         """
         self.folder.delete_subfolder(str(asset_uuid))
-        del self.library[asset_uuid]
+        self.save()
+        del self.assets[asset_uuid]
 
     def get(self, asset_uuid: UUID) -> Asset | None:
         """
@@ -69,19 +59,18 @@ class AssetManager:
         Args:
             asset_uuid (UUID): The UUID of the asset to retrieve.
 
-        Returns:
-            Asset | None: The asset object if found, or None if not found.
-        """
-        return self.library.get(asset_uuid, None)
+    def save(self):
+        self.save_file.serialize(self.assets)
+
+    def load(self):
+        loaded_library = self.save_file.deserialize(AssetDictionary)
+        # TODO check if the new library reflects the folders
+        self.assets = loaded_library
 
     def archive(self, asset_uuid: UUID):
-        """
-        Archive an asset. (Method implementation is missing and should be completed).
-
-        Args:
-            asset_uuid (UUID): The UUID of the asset to archive.
-        """
-        pass
+        # TODO ZIP A FOLDER I MIGHT IMPLEMENT THIS ON FOLDER
+        self.remove(asset_uuid)
+        self.save()
 
     def connect_asset(self, parent_asset: UUID, child_asset: UUID):
         """
