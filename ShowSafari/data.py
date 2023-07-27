@@ -3,11 +3,12 @@ from datetime import datetime, date, time
 from typing import Set, Dict
 from dataclasses_json import dataclass_json
 from uuid import UUID
-from dataclasses import field
+from dataclasses import field, dataclass
 from typing import List
 
 
 @dataclass_json
+@dataclass
 class Asset:
     """ Represents an asset.
 
@@ -17,13 +18,13 @@ class Asset:
     """
     name: str
     connections: List[UUID] = field(default_factory=list)
-
     def add_connection(self, connection_uuid: UUID):
         """ add_connection(connection_uuid: UUID): Adds a connection to the asset using the provided UUID. """
         self.connections.append(connection_uuid)
 
 
 @dataclass_json
+@dataclass
 class Shot(Asset):
     """ Represents a shot, a type of asset.
 
@@ -42,6 +43,7 @@ class Shot(Asset):
 
 
 @dataclass_json
+@dataclass
 class Sound(Asset):
     """ Represents a sound asset.
 
@@ -58,6 +60,7 @@ class Sound(Asset):
 
 
 @dataclass_json
+@dataclass
 class Model(Asset):
     """ Represents a 3D model asset.
 
@@ -72,6 +75,7 @@ class Model(Asset):
 
 
 @dataclass_json
+@dataclass
 class Show:
     """ Represents a TV show.
 
@@ -96,6 +100,7 @@ class Show:
 
 
 @dataclass_json
+@dataclass
 class Library(UserDict):
     """ Represents a library of assets.
 
@@ -117,7 +122,7 @@ class Library(UserDict):
         super().__setitem__(key, value)
 
 
-types = {
+ASSET_TYPES = {
     'shot': Shot,
     'sound': Sound,
     'model': Model,
