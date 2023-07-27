@@ -16,13 +16,25 @@ class Asset:
         connections (List[UUID]): List of UUIDs representing connections to other assets.
     """
     name: str
+    type: str
     connections: List[UUID] = field(default_factory=list)
 
     def connect(self, connection_uuid: UUID):
-        """ add_connection(connection_uuid: UUID): Adds a connection to the asset using the provided UUID. """
+        """
+        Connect the asset to another asset.
+
+        Args:
+            connection_uuid (UUID): The UUID of the asset to connect.
+        """
         self.connections.append(connection_uuid)
 
     def disconnect(self, connection_uuid: UUID):
+        """
+        Disconnect the asset from another asset.
+
+        Args:
+            connection_uuid (UUID): The UUID of the asset to disconnect.
+        """
         self.connections.remove(connection_uuid)
 
 
@@ -126,7 +138,7 @@ class Library(UserDict):
 
 
 ASSET_TYPES = {
-    'shot': Shot,
-    'sound': Sound,
-    'model': Model,
+    'Shot': Shot,
+    'Sound': Sound,
+    'Model': Model,
 }

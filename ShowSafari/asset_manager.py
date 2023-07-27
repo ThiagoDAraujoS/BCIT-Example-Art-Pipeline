@@ -30,20 +30,24 @@ class AssetManager:
                 return uuid
         return None
 
-    def create(self, asset_type: str = "") -> UUID:
+    def create(self, asset_name: str = "", asset_type: str = "") -> UUID:
         """
         Create a new asset and add it to the library.
 
         Args:
+            asset_name (str, optional): The name of the asset to create. Defaults to an empty string.
             asset_type (str, optional): The type of the asset to create. Defaults to an empty string.
 
         Returns:
             UUID: The UUID of the newly created asset.
         """
         uuid = generate_uuid()
-        asset = ASSET_TYPES.get(asset_type.lower(), Asset)()
-        self.library[uuid] = asset
         folder_name = str(uuid)
+
+        asset_type = asset_type.capitalize()
+        asset_name = asset_name.capitalize()
+
+        self.library[uuid] = ASSET_TYPES.get(asset_type, Asset)(asset_name, asset_type)
         self.folder.create_subfolder(folder_name)
         self.folder.open_folder_in_explorer(folder_name)
         return uuid
