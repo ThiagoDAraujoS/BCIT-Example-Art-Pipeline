@@ -4,14 +4,19 @@ import shutil
 
 
 class Folder:
+    """
+    A class representing a folder on the file system.
+    """
     def __init__(self, folder_path: str):
         """
-        Initialize a Folder instance.
+        Initialize a Folder instance. And make a folder dor it
 
         Args:
             folder_path (str): The path to the folder.
         """
         self._path: str = os.path.normpath(folder_path)
+        """_path (str): The path to the folder."""
+
         self.create()
 
     @property
