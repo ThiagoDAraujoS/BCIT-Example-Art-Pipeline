@@ -1,6 +1,5 @@
 import os
 import shutil
-from os import path
 
 
 class Folder:
@@ -16,10 +15,11 @@ class Folder:
         Args:
             folder_path (str): The path of the folder.
         """
-        self._path = path.normpath(folder_path)
+        self._path: str = os.path.normpath(folder_path)
         self.create()
 
-    def get_path(self):
+    @property
+    def path(self) -> str:
         """ Get the path of the folder.
 
         Returns:
@@ -27,13 +27,14 @@ class Folder:
         """
         return self._path
 
-    def set_path(self, folder_path):
+    @path.setter
+    def path(self, folder_path: str):
         """ Set the path of the folder.
 
         Args:
             folder_path (str): The new path of the folder.
         """
-        self._path = path.normpath(folder_path)
+        self._path: str = os.path.normpath(folder_path)
 
     def create(self):
         """ Creates the folder if it doesn't exist. """
@@ -45,26 +46,57 @@ class Folder:
         if self.exists():
             shutil.rmtree(self._path)
 
-    def exists(self):
+    def exists(self) -> bool:
         """ Checks if the folder exists.
 
         Returns:
             bool: True if the folder exists, False otherwise.
         """
-        return path.exists(self._path)
+        return os.path.exists(self._path)
 
-    def __repr__(self):
+    def create_subfolder(self, subfolder_name: str):
+        """ Creates a subfolder within the current folder.
+
+        Args:
+            subfolder_name (str): The name of the subfolder to create.
+        """
+        os.mkdir(self.get_subfolder_path(subfolder_name))
+
+    def get_subfolder_path(self, subfolder_name: str) -> str:
+        """ Returns the path of a subfolder within the current folder.
+
+        Args:
+            subfolder_name (str): The name of the subfolder.
+
+        Returns:
+            str: The normalized path of the subfolder.
+        """
+        return os.path.join(self.path, subfolder_name)
+
+    def subfolder_exists(self, subfolder_name: str) -> bool:
+        """ Checks if a subfolder exists within the current folder.
+
+        Args:
+            subfolder_name (str): The name of the subfolder to check.
+
+        Returns:
+            bool: True if the subfolder exists, False otherwise.
+        """
+        subfolder_path = self.get_subfolder_path(subfolder_name)
+        return os.path.exists(subfolder_path)
+
+    def __repr__(self) -> str:
         """ Returns the string representation of the Folder object.
 
         Returns:
             str: The folder's path.
         """
-        return self._path
+        return self.path
 
-    def __str__(self):
+    def __str__(self) -> str:
         """ Returns a user-friendly string representation of the Folder object.
 
         Returns:
             str: A formatted string indicating the folder's path.
         """
-        return f"Folder path: {self._path}"
+        return f"Folder path: {self.path}"
