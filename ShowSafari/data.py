@@ -42,6 +42,36 @@ class Shot(Asset):
 
 
 @dataclass_json
+class Sound(Asset):
+    """ Represents a sound asset.
+
+    Attributes:
+        name (str): The name of the sound asset.
+        connections (List[UUID]): List of UUIDs representing connections to other assets.
+        duration (float): The duration of the sound in seconds.
+        format (str): The audio format of the sound (e.g., mp3, wav, etc.).
+        bitrate (int): The audio bitrate in kbps.
+    """
+    duration: time = field(default_factory=lambda: time(0, 0, 0))
+    format: str = ""
+    bitrate: int = 128
+
+
+@dataclass_json
+class Model(Asset):
+    """ Represents a 3D model asset.
+
+    Attributes:
+        name (str): The name of the 3D model asset.
+        connections (List[UUID]): List of UUIDs representing connections to other assets.
+        vertices (int): The number of vertices in the model.
+        faces (int): The number of faces (polygons) in the model.
+    """
+    vertices: int = 0
+    faces: int = 0
+
+
+@dataclass_json
 class Show:
     """ Represents a TV show.
 
@@ -85,3 +115,10 @@ class Library(UserDict):
             raise TypeError(f"Values must be of type Asset, got {type(value)} instead.")
 
         super().__setitem__(key, value)
+
+
+types = {
+    'shot': Shot,
+    'sound': Sound,
+    'model': Model,
+}
