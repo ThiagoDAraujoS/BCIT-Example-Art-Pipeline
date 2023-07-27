@@ -111,12 +111,12 @@ class Show:
     description: str = ""
     countries_of_origin: Set[str] = field(default_factory=set)
     third_party_services: Set[str] = field(default_factory=set)
-    shots: Dict[str, Shot] = field(default_factory=dict)
+    shots: List[UUID] = field(default_factory=dict)
 
 
 @dataclass_json
 @dataclass
-class Library(UserDict):
+class AssetDictionary(UserDict):
     """ Represents a library of assets.
 
         Inherits from collections.UserDict.
@@ -124,7 +124,7 @@ class Library(UserDict):
     Attributes:
         data (dict): The dictionary containing assets with UUID keys and Asset values (default: empty dictionary).
     """
-    data: dict[UUID, Asset] = field(default_factory=dict)
+    data: Dict[UUID, Asset] = field(default_factory=dict)
 
     def __setitem__(self, key, value):
         """ __setitem__(key, value): Override of the base UserDict's __setitem__ method to enforce type constraints. """

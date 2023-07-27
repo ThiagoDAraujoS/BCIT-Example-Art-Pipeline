@@ -16,5 +16,3 @@ def uuid_decoder(obj):
 
 # Set up the custom encoder and decoder globally for dataclasses_json
 config(encoder=uuid_encoder, decoder=uuid_decoder)
-
-print("x")
