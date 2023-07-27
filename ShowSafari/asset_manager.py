@@ -78,3 +78,24 @@ class AssetManager:
             asset_uuid (UUID): The UUID of the asset to archive.
         """
         pass
+
+    def connect_asset(self, parent_asset: UUID, child_asset: UUID):
+        """
+        Connect a child asset to a parent asset in the library.
+
+        Args:
+            parent_asset (UUID): The UUID of the parent asset.
+            child_asset (UUID): The UUID of the child asset to connect.
+        """
+        self.library.get(parent_asset).connect(child_asset)
+
+    def disconnect_asset(self, parent_asset: UUID, child_asset: UUID):
+        """
+        Disconnect a child asset from its parent asset in the library.
+
+        Args:
+            parent_asset (UUID): The UUID of the parent asset.
+            child_asset (UUID): The UUID of the child asset to disconnect.
+
+        """
+        self.library.get(parent_asset).disconnect(child_asset)

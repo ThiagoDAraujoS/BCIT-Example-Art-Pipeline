@@ -18,9 +18,12 @@ class Asset:
     name: str
     connections: List[UUID] = field(default_factory=list)
 
-    def add_connection(self, connection_uuid: UUID):
+    def connect(self, connection_uuid: UUID):
         """ add_connection(connection_uuid: UUID): Adds a connection to the asset using the provided UUID. """
         self.connections.append(connection_uuid)
+
+    def disconnect(self, connection_uuid: UUID):
+        self.connections.remove(connection_uuid)
 
 
 @dataclass_json
@@ -109,7 +112,7 @@ class Library(UserDict):
     Attributes:
         data (dict): The dictionary containing assets with UUID keys and Asset values (default: empty dictionary).
     """
-    data: dict = field(default_factory=dict)
+    data: dict[UUID, Asset] = field(default_factory=dict)
 
     def __setitem__(self, key, value):
         """ __setitem__(key, value): Override of the base UserDict's __setitem__ method to enforce type constraints. """
