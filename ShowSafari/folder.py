@@ -7,14 +7,18 @@ class Folder:
     """
     A class representing a folder on the file system.
     """
-    def __init__(self, folder_path: str):
+    def __init__(self, location_path: str, folder_name: str):
         """
-        Initialize a Folder instance. And make a folder dor it
+        Initialize a Folder instance. And make a folder for it
 
         Args:
-            folder_path (str): The path to the folder.
+            location_path (str): The path to the folder location.
+            folder_name (str): The folder name.
         """
-        self._path: str = os.path.normpath(folder_path)
+        self._name: str = folder_name
+        """_name (str): The folder name"""
+
+        self._path: str = os.path.join(location_path, folder_name)
         """_path (str): The path to the folder."""
 
         self.create()
