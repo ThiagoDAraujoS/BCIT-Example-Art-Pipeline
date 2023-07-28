@@ -1,19 +1,31 @@
 from __future__ import annotations
-from ShowSafari import *
+
+from .folder import Folder
+from .save_file import SaveFile
+from .data import Asset, ASSET_TYPES
+
+from dataclasses import dataclass, field
+from dataclasses_json import dataclass_json
 from typing import Dict
 from uuid import uuid4 as generate_uuid
 
 
+@dataclass_json
+@dataclass
+class LibraryData:
+    assets: Dict[str, Asset] = field(default_factory=dict)
+
+
 class Library:
     def __init__(self, location_path):
-        self.folder: Folder = Folder(location_path, "Library")
-        self.assets: Dict[str, Asset] = {}
-        self.save_file: SaveFile = SaveFile(self.folder, self.assets, "Library")
+        self._folder: Folder = Folder(location_path, "Library")
+        self._data: LibraryData = LibraryData()
+        self._save_file: SaveFile = SaveFile(self._folder, self._data, "Library")
 
-        self.save = self.save_file.save
-        self.load = self.save_file.load
-        self.get = self.assets.get
-
+        self.save = self._save_file.save
+        self.load = self._save_file.load
+        self.get = self._data.assets.get
+        self._save_file.create()
         self.load()
 
     def create(self, asset_name: str = "", asset_type: str = "Undefined") -> str:
@@ -22,19 +34,19 @@ class Library:
         asset_type = asset_type.capitalize()
         asset_name = asset_name.capitalize()
 
-        self.assets[uuid] = ASSET_TYPES.get(asset_type, Asset)(asset_name, asset_type)
-        self.folder.create_subfolder(uuid)
-        self.folder.open_folder_in_explorer(uuid)
+        self._data.assets[uuid] = ASSET_TYPES.get(asset_type, Asset)(asset_name, asset_type)
+        self._folder.create_subfolder(uuid)
+        self._folder.open_folder_in_explorer(uuid)
         self.save()
         return uuid
 
     def remove(self, asset_uuid: str):
-        self.folder.delete_subfolder(asset_uuid)
+        self._folder.delete_subfolder(asset_uuid)
         self.save()
-        del self.assets[asset_uuid]
+        self._data.assets.pop(asset_uuid)
 
     def get_by_name(self, asset_name: str) -> str | None:
-        for uuid, asset in self.assets.items():
+        for uuid, asset in self._data.assets.items():
             if asset.name == asset_name:
                 return uuid
         return None
@@ -45,7 +57,7 @@ class Library:
         self.save()
 
     def connect_asset(self, parent_asset: str, child_asset: str):
-        self.assets[parent_asset].connect(child_asset)
+        self._data.assets[parent_asset].connect(child_asset)
 
     def disconnect_asset(self, parent_asset: str, child_asset: str):
-        self.assets[parent_asset].disconnect(child_asset)
+        self._data.assets[parent_asset].disconnect(child_asset)
