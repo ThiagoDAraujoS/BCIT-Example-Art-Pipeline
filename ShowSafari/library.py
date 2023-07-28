@@ -8,7 +8,7 @@ class Library:
     def __init__(self, location_path):
         self.folder: Folder = Folder(location_path, "Library")
         self.assets: Dict[str, Asset] = {}
-        self.save_file: SaveFile = SaveFile(self.folder, dict, "asset_library.json")
+        self.save_file: SaveFile = SaveFile(self.folder, self.assets, "Library")
         self.load()
 
     def create(self, asset_name: str = "", asset_type: str = "Undefined") -> str:
@@ -38,12 +38,11 @@ class Library:
         return None
 
     def save(self):
-        self.save_file.serialize(self.assets)
+        self.save_file.serialize()
 
     def load(self):
-        loaded_library = self.save_file.deserialize()
+        self.save_file.deserialize()
         # TODO check if the new library reflects the folders
-        self.assets = loaded_library
 
     def archive(self, asset_uuid: str):
         # TODO ZIP A FOLDER I MIGHT IMPLEMENT THIS ON FOLDER
