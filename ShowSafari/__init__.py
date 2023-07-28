@@ -1,19 +1,11 @@
-from .data import Asset, Shot, Sound, Model, Show, ASSET_TYPES
-from .folder import Folder
-from .instance import Instance
-from .library import Library
-from .save_file import SaveFile
+from datetime import date, time, datetime
+import dataclasses_json.cfg
 
+dataclasses_json.cfg.global_config.encoders[date] = date.isoformat
+dataclasses_json.cfg.global_config.decoders[date] = date.fromisoformat
 
-__all__ = [
-    "Asset",
-    "Shot",
-    "Sound",
-    "Model",
-    "Show",
-    "ASSET_TYPES",
-    "Folder",
-    "Instance",
-    "Library",
-    "SaveFile"
-]
+dataclasses_json.cfg.global_config.encoders[time] = time.isoformat
+dataclasses_json.cfg.global_config.decoders[time] = time.fromisoformat
+
+dataclasses_json.cfg.global_config.encoders[datetime] = datetime.isoformat
+dataclasses_json.cfg.global_config.decoders[datetime] = datetime.fromisoformat
