@@ -9,6 +9,11 @@ class Library:
         self.folder: Folder = Folder(location_path, "Library")
         self.assets: Dict[str, Asset] = {}
         self.save_file: SaveFile = SaveFile(self.folder, self.assets, "Library")
+
+        self.save = self.save_file.save
+        self.load = self.save_file.load
+        self.get = self.assets.get
+
         self.load()
 
     def create(self, asset_name: str = "", asset_type: str = "Undefined") -> str:
@@ -28,21 +33,11 @@ class Library:
         self.save()
         del self.assets[asset_uuid]
 
-    def get(self, asset_uuid: str) -> Asset | None:
-        return self.assets.get(asset_uuid, None)
-
     def get_by_name(self, asset_name: str) -> str | None:
         for uuid, asset in self.assets.items():
             if asset.name == asset_name:
                 return uuid
         return None
-
-    def save(self):
-        self.save_file.serialize()
-
-    def load(self):
-        self.save_file.deserialize()
-        # TODO check if the new library reflects the folders
 
     def archive(self, asset_uuid: str):
         # TODO ZIP A FOLDER I MIGHT IMPLEMENT THIS ON FOLDER

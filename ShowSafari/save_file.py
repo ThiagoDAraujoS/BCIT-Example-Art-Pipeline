@@ -13,11 +13,11 @@ class SaveFile:
         self._folder: Folder = folder
         self._file_path: str = os.path.join(self._folder.path, f"{file_name}.json")
 
-    def serialize(self) -> None:
+    def save(self) -> None:
         with open(self._file_path, 'w') as file:
             file.write(self._data_reference.to_json())
 
-    def deserialize(self):
+    def load(self):
         with open(self._file_path, 'r') as file:
             data_string = file.read()
 
