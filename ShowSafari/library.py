@@ -42,7 +42,6 @@ class Library:
         self.save = self._save_file.save
         self.load = self._save_file.load
         self.get = self._assets.data.get
-        self.get_by_name = self._assets.get_by_name
         self._save_file.create()
         self.load()
 
