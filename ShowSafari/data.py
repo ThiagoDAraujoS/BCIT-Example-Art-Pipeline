@@ -110,11 +110,7 @@ class Show:
     description: str = ""
     countries_of_origin: Set[str] = field(default_factory=set)
     third_party_services: Set[str] = field(default_factory=set)
-    shots: List[str] = field(default_factory=dict)
+    shots: List[str] = field(default_factory=list)
 
 
-ASSET_TYPES = {
-    'Shot': Shot,
-    'Sound': Sound,
-    'Model': Model,
-}
+
