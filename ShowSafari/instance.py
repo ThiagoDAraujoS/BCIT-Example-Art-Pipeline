@@ -10,6 +10,8 @@ from dataclasses_json import dataclass_json, Undefined
 import os.path
 from typing import Dict
 
+DEBUG = True
+
 
 @dataclass_json
 @dataclass
@@ -25,7 +27,6 @@ class Instance:
         self.show_folder: Folder = Folder(self.main_folder_path, "Shows")
         """ Show folder representation """
 
-        self.show_folder.create()
         self.shows: ShowsData = ShowsData()
         """ Dictionary of Shows """
 
@@ -38,21 +39,27 @@ class Instance:
         self.save_shows = self.show_file.save
         self.load_shows = self.show_file.load
 
-    def create_show(self, show_name: str) -> bool:
+    def create_show(self, show_name: str):
         if show_name in self.shows.data:
-            return False
-        self.shows.data[show_name] = Show()
-        self.show_folder.create_subfolder(show_name)
-        self.save_shows()
-        return True
+            if DEBUG:
+                return
+            else:
+                raise KeyError(f"Show {show_name} already presented in shows collection")
 
-    def delete_show(self, show_name: str) -> bool:
+        self.shows.data[show_name] = Show()
+        self.show_folder.setup_subfolder(show_name)
+        self.save_shows()
+
+    def delete_show(self, show_name: str):
         if show_name not in self.shows.data:
-            return False
+            if DEBUG:
+                return
+            else:
+                raise KeyError(f"Show {show_name} not presented in shows collection")
+
         self.show_folder.delete_subfolder(show_name)
         self.shows.data.pop(show_name)
         self.save_shows()
-        return True
 
     def set_show_data(self, show_name: str, show_json: str):
         self.shows.data[show_name].from_json(show_json, undefine=Undefined.EXCLUDE)
@@ -60,9 +67,11 @@ class Instance:
     def get_show_data(self, show_name: str) -> str:
         return self.shows.data[show_name].to_json()
 
-    def create_shot(self, show_name, shot_name):
+    def create_shot(self, show_name, shot_name) -> str:
         uuid = self.library.create(shot_name, "Shot")
         self.shows.data[show_name].shots.append(uuid)
+        self.show_file.save()
+        return uuid
 
     def get_asset_data(self, asset_id):
         return self.library.get(asset_id).to_json()
@@ -72,5 +81,8 @@ class Instance:
 
     def get_show_folder(self, show_name) -> str | None:
         if show_name not in self.shows.data:
-            return None
+            if DEBUG:
+                raise KeyError(f"Show {show_name} not presented in shows collection")
+            else:
+                return None
         return self.show_folder.get_subfolder_path(show_name)
