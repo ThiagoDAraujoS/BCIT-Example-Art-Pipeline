@@ -39,11 +39,8 @@ class Library:
         self._assets: LibraryData = LibraryData()
         self._save_file: SaveFile = SaveFile(self._folder, self._assets, "Library")
 
-        self.save = self._save_file.save
-        self.load = self._save_file.load
         self.get = self._assets.data.get
-        self._save_file.create()
-        self.load()
+        self._save_file.load()
 
     def create(self, asset_name: str = "", asset_type: str = "Undefined") -> str:
         uuid = str(generate_uuid())
@@ -53,20 +50,20 @@ class Library:
 
         new_asset = ASSET_TYPES.get(asset_type, Asset)(asset_name, asset_type)
         self._assets.add(new_asset, uuid)
-        self._folder.create_subfolder(uuid)
+        self._folder.setup_subfolder(uuid)
         self._folder.open_folder_in_explorer(uuid)
-        self.save()
+        self._save_file.save()
         return uuid
 
     def remove(self, asset_uuid: str):
         self._folder.delete_subfolder(asset_uuid)
-        self.save()
+        self._save_file.save()
         self._assets.remove(asset_uuid)
 
     def archive(self, asset_uuid: str):
         # TODO ZIP A FOLDER I MIGHT IMPLEMENT THIS ON FOLDER
         self.remove(asset_uuid)
-        self.save()
+        self._save_file.save()
 
     def get_by_name(self, asset_name):
         for uuid, asset in self._assets.data.items():
@@ -79,6 +76,10 @@ class Library:
 
     def connect_asset(self, parent_asset: str, child_asset: str):
         self._assets.data[parent_asset].connect(child_asset)
+        # TODO SAVE THE LIBRARY STATE AFTER CONNECTING AND DISCONNECTING
+        self._save_file.save()
 
     def disconnect_asset(self, parent_asset: str, child_asset: str):
         self._assets.data[parent_asset].disconnect(child_asset)
+        # TODO SAVE THE LIBRARY STATE AFTER CONNECTING AND DISCONNECTING
+        self._save_file.save()
