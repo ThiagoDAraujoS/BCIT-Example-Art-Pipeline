@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from .save_file import SaveFile
+from .save_file import SaveFile, auto_save
 from .folder import Folder
 from .data import Show
 from .library import Library
@@ -36,9 +36,9 @@ class Instance:
         self.library: Library = Library(self.main_folder_path)
         """ Asset library reference """
 
-        self.save_shows = self.show_file.save
         self.load_shows = self.show_file.load
 
+    @auto_save("show_file")
     def create_show(self, show_name: str):
         if show_name in self.shows.data:
             if DEBUG:
@@ -48,8 +48,8 @@ class Instance:
 
         self.shows.data[show_name] = Show()
         self.show_folder.setup_subfolder(show_name)
-        self.save_shows()
 
+    @auto_save("show_file")
     def delete_show(self, show_name: str):
         if show_name not in self.shows.data:
             if DEBUG:
@@ -59,7 +59,6 @@ class Instance:
 
         self.show_folder.delete_subfolder(show_name)
         self.shows.data.pop(show_name)
-        self.save_shows()
 
     def set_show_data(self, show_name: str, show_json: str):
         self.shows.data[show_name].from_json(show_json, undefine=Undefined.EXCLUDE)
@@ -67,10 +66,10 @@ class Instance:
     def get_show_data(self, show_name: str) -> str:
         return self.shows.data[show_name].to_json()
 
+    @auto_save("show_file")
     def create_shot(self, show_name, shot_name) -> str:
         uuid = self.library.create(shot_name, "Shot")
         self.shows.data[show_name].shots.append(uuid)
-        self.show_file.save()
         return uuid
 
     def get_asset_data(self, asset_id):

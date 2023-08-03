@@ -1,8 +1,10 @@
+import inspect
+
 from .folder import Folder
 
 import dataclasses
 from dataclasses_json import dataclass_json
-from typing import Type
+from typing import Type, Callable
 import os.path
 
 
@@ -65,3 +67,52 @@ class SaveFile:
             bool: True if the file exists, False otherwise.
         """
         return os.path.exists(self._file_path)
+
+
+def auto_save(field_name: str):
+    """
+    Decorator to save a file associated with an instance after the decorated method is executed.
+
+    This decorator is designed to work with a class instance that contains a `SaveFile` attribute.
+    It saves the file using the provided reference attribute after the decorated method is executed,
+    ensuring that the changes made during the method call are persisted.
+
+    Parameters:
+        field_name (str): The name of the attribute that holds the `SaveFile` instance in the class.
+
+    Returns:
+        Callable: A wrapper function that wraps the original method.
+
+    Raises:
+        ValueError: If the decorator is used on a static method or class method.
+        AttributeError: If the field name does not exist in the class instance.
+
+    Example usage:
+        class MyClass:
+            def __init__(self):
+                self._save_file = SaveFile()
+
+            @SaveFile.save_when_done("_save_file")
+            def my_method(self, data):
+                # Method implementation that modifies the data
+                print("Method executed.")
+
+        obj = MyClass()
+        obj.my_method("some data")
+        # After the method execution, the associated file is saved automatically.
+    """
+
+    def inner(func: Callable):
+        def wrapper(self, *args, **kwargs):
+            if inspect.isclass(self) or inspect.ismethod(func):
+                raise ValueError("Decorator save_when_done cannot be used on static methods or class methods.")
+
+            if not hasattr(self, field_name):
+                raise AttributeError(f"Attribute '{field_name}' not found in the class instance.")
+
+            func(self, *args, **kwargs)
+            getattr(self, field_name).save()
+
+        return wrapper
+
+    return inner

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from .folder import Folder
-from .save_file import SaveFile
+from .save_file import SaveFile, auto_save
 from .data import *
 
 from dataclasses import dataclass, field
@@ -32,6 +32,7 @@ class Library:
         self.get = self._assets.data.get
         self._save_file.load()
 
+    @auto_save("_save_file")
     def create(self, asset_name: str, asset_type: str = "Undefined") -> str:
         """ Create a new asset and add it to the data container.
 
@@ -63,11 +64,9 @@ class Library:
         # Setup a folder for the asset
         self._folder.setup_subfolder(uuid)
         self._folder.open_folder_in_explorer(uuid)
-
-        # Save changes
-        self._save_file.save()
         return uuid
 
+    @auto_save("_save_file")
     def remove(self, asset_uuid: str):
         # Remove the folder
         self._folder.delete_subfolder(asset_uuid)
@@ -84,13 +83,20 @@ class Library:
         if asset:
             self._assets.type_index[asset.asset_type].remove(asset_uuid)
 
-        # Save Changes
-        self._save_file.save()
-
+    @auto_save("_save_file")
     def archive(self, asset_uuid: str):
         # TODO ZIP A FOLDER I MIGHT IMPLEMENT THIS ON FOLDER
         self.remove(asset_uuid)
-        self._save_file.save()
+
+    @auto_save("_save_file")
+    def connect_asset(self, parent_asset: str, child_asset: str):
+        self.get(parent_asset).assets_used.add(child_asset)
+        self.get(child_asset).assets_used_by.add(parent_asset)
+
+    @auto_save("_save_file")
+    def disconnect_asset(self, parent_asset: str, child_asset: str):
+        self.get(parent_asset).assets_used.remove(child_asset)
+        self.get(child_asset).assets_used_by.remove(parent_asset)
 
     def get_by_name(self, asset_name):
         for uuid, asset in self._assets.data.items():
@@ -100,14 +106,3 @@ class Library:
 
     def get_types(self):
         return list(self._assets.type_index.keys())
-
-    def connect_asset(self, parent_asset: str, child_asset: str):
-        self.get(parent_asset).assets_used.add(child_asset)
-        self.get(child_asset).assets_used_by.add(parent_asset)
-        self._save_file.save()
-
-    def disconnect_asset(self, parent_asset: str, child_asset: str):
-        self.get(parent_asset).assets_used.remove(child_asset)
-        self.get(child_asset).assets_used_by.remove(parent_asset)
-        self._save_file.save()
-
