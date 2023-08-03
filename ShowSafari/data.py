@@ -7,12 +7,17 @@ from dataclasses import field, dataclass
 @dataclass_json
 @dataclass
 class Asset:
-    """
-    Represents a generic asset.
+    """ Represents an asset.
+
+    Attributes:
+        name (str): The name of the asset.
+        assets_used (List[str(UUID)]): List of UUIDs representing assets used by this asset.
+        assets_used_by (List[str(UUID)]): List of UUIDs representing assets using this asset.
     """
     name: str
     _asset_type: str
-    connections: List[str] = field(default_factory=list)
+    assets_used: Set[str] = field(default_factory=set)
+    assets_used_by: Set[str] = field(default_factory=set)
 
     @property
     def asset_type(self):
@@ -24,31 +29,11 @@ class Asset:
         """
         return self._asset_type
 
-    def connect(self, connection_uuid: str):
-        """
-        Connect the asset to another asset.
-
-        Parameters:
-            connection_uuid (str): The UUID of the asset to connect to.
-        """
-        self.connections.append(connection_uuid)
-
-    def disconnect(self, connection_uuid: str):
-        """
-        Disconnect the asset from another asset.
-
-        Parameters:
-            connection_uuid (str): The UUID of the asset to disconnect from.
-        """
-        self.connections.remove(connection_uuid)
-
 
 @dataclass_json
 @dataclass
 class Shot(Asset):
-    """
-    Represents a shot asset, a subclass of Asset.
-    """
+    """ Represents a shot, a type of asset."""
     clip_number: int = -1
     length: time = field(default_factory=lambda: datetime.now().time())
     characters: Set[str] = field(default_factory=set)
@@ -58,9 +43,7 @@ class Shot(Asset):
 @dataclass_json
 @dataclass
 class Sound(Asset):
-    """
-    Represents a sound asset, a subclass of Asset.
-    """
+    """ Represents a sound asset."""
     duration: time = field(default_factory=lambda: time(0, 0, 0))
     format: str = ""
     bitrate: int = 128
@@ -69,9 +52,7 @@ class Sound(Asset):
 @dataclass_json
 @dataclass
 class Model(Asset):
-    """
-    Represents a model asset, a subclass of Asset.
-    """
+    """ Represents a 3D model asset."""
     vertices: int = 0
     faces: int = 0
 
