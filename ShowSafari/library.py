@@ -5,7 +5,7 @@ from .save_file import SaveFile, autosave
 from .data import *
 
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
+from dataclasses_json import dataclass_json, Undefined
 from typing import Dict
 from uuid import uuid4 as generate_uuid
 
@@ -97,6 +97,13 @@ class Library:
     def disconnect_asset(self, parent_asset: str, child_asset: str):
         self.get(parent_asset).assets_used.remove(child_asset)
         self.get(child_asset).assets_used_by.remove(parent_asset)
+
+    @autosave("_save_file")
+    def set_asset_data(self, asset_id: str, asset_json: str):
+        self.get(asset_id).from_json(asset_json, undefine=Undefined.EXCLUDE)
+
+    def get_asset_data(self, asset_id):
+        return self.get(asset_id).to_json()
 
     def get_by_name(self, asset_name):
         for uuid, asset in self._assets.data.items():

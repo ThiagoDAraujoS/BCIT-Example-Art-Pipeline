@@ -21,67 +21,64 @@ class ShowsData:
 
 class Instance:
     def __init__(self, main_folder_path: str):
-        self.main_folder_path: str = os.path.normpath(main_folder_path)
+        self._main_folder_path: str = os.path.normpath(main_folder_path)
         """ Main folder path """
 
-        self.show_folder: Folder = Folder(self.main_folder_path, "Shows")
+        self._show_folder: Folder = Folder(self._main_folder_path, "Shows")
         """ Show folder representation """
 
-        self.shows: ShowsData = ShowsData()
+        self._shows: ShowsData = ShowsData()
         """ Dictionary of Shows """
 
-        self.show_file: SaveFile = SaveFile(self.show_folder, self.shows, "Shows")
+        self._show_file: SaveFile = SaveFile(self._show_folder, self._shows, "Shows")
         """ Save file for show dictionary """
 
-        self.library: Library = Library(self.main_folder_path)
+        self.library: Library = Library(self._main_folder_path)
         """ Asset library reference """
 
-        self.load_shows = self.show_file.load
+        self.get_show = self._shows.data.get
+
+        self.load_shows = self._show_file.load
 
     @autosave("show_file")
     def create_show(self, show_name: str):
-        if show_name in self.shows.data:
+        if show_name in self._shows.data:
             if DEBUG:
                 return
             else:
                 raise KeyError(f"Show {show_name} already presented in shows collection")
 
-        self.shows.data[show_name] = Show()
-        self.show_folder.setup_subfolder(show_name)
+        self._shows.data[show_name] = Show()
+        self._show_folder.setup_subfolder(show_name)
 
     @autosave("show_file")
     def delete_show(self, show_name: str):
-        if show_name not in self.shows.data:
+        if show_name not in self._shows.data:
             if DEBUG:
                 return
             else:
                 raise KeyError(f"Show {show_name} not presented in shows collection")
 
-        self.show_folder.delete_subfolder(show_name)
-        self.shows.data.pop(show_name)
+        self._show_folder.delete_subfolder(show_name)
+        self._shows.data.pop(show_name)
 
+    @autosave("show_file")
     def set_show_data(self, show_name: str, show_json: str):
-        self.shows.data[show_name].from_json(show_json, undefine=Undefined.EXCLUDE)
-
-    def get_show_data(self, show_name: str) -> str:
-        return self.shows.data[show_name].to_json()
+        self._shows.data[show_name].from_json(show_json, undefine=Undefined.EXCLUDE)
 
     @autosave("show_file")
     def create_shot(self, show_name, shot_name) -> str:
         uuid = self.library.create(shot_name, "Shot")
-        self.shows.data[show_name].shots.append(uuid)
+        self._shows.data[show_name].shots.append(uuid)
         return uuid
 
-    def get_asset_data(self, asset_id):
-        return self.library.get(asset_id).to_json()
-
-    def set_asset_data(self, asset_id: str, asset_json: str):
-        self.library.get(asset_id).from_json(asset_json, undefine=Undefined.EXCLUDE)
+    def get_show_data(self, show_name: str) -> str:
+        return self._shows.data[show_name].to_json()
 
     def get_show_folder(self, show_name) -> str | None:
-        if show_name not in self.shows.data:
+        if show_name not in self._shows.data:
             if DEBUG:
                 raise KeyError(f"Show {show_name} not presented in shows collection")
             else:
                 return None
-        return self.show_folder.get_subfolder_path(show_name)
+        return self._show_folder.get_subfolder_path(show_name)
