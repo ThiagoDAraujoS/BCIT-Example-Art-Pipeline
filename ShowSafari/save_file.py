@@ -69,7 +69,7 @@ class SaveFile:
         return os.path.exists(self._file_path)
 
 
-def auto_save(field_name: str):
+def autosave(field_name: str):
     """
     Decorator to save a file associated with an instance after the decorated method is executed.
 
