@@ -5,4 +5,4 @@ if __name__ == '__main__':
     i.create_show("chickens")
     shot_id = i.create_shot("chickens", "shot1")
     audio_id = i.library.create("music", "Audio")
-    i.library.connect_asset(shot_id, audio_id)
+    i.library.connect(shot_id, audio_id)
