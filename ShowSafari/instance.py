@@ -37,6 +37,7 @@ class Instance:
         """ Asset library reference """
 
         self.get_show = self._shows.data.get
+        self._show_file.load()
 
     @autosave("_show_file")
     def create_show(self, show_name: str):

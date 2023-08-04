@@ -9,12 +9,6 @@ from dataclasses_json import dataclass_json, Undefined
 from typing import Dict
 from uuid import uuid4 as generate_uuid
 
-ASSET_TYPES = {
-    'Shot': Shot,
-    'Sound': Sound,
-    'Model': Model,
-}
-
 
 @dataclass_json
 @dataclass
@@ -54,8 +48,7 @@ class AssetLibrary:
         """
         # Prepare new asset's virtual representation
         uuid = str(generate_uuid())
-        asset_type = asset_type.capitalize()
-        new_asset = ASSET_TYPES.get(asset_type, Asset)(asset_name, asset_type)
+        new_asset = Asset.create_asset(asset_name, asset_type)
 
         # Add asset to the data container and, type index it
         self._assets.data[uuid] = new_asset
