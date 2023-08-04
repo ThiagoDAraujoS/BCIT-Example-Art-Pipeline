@@ -110,8 +110,9 @@ def autosave(field_name: str):
             if not hasattr(self, field_name):
                 raise AttributeError(f"Attribute '{field_name}' not found in the class instance.")
 
-            func(self, *args, **kwargs)
+            result = func(self, *args, **kwargs)
             getattr(self, field_name).save()
+            return result
 
         return wrapper
 
