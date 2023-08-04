@@ -3,7 +3,7 @@ from __future__ import annotations
 from .save_file import SaveFile, autosave
 from .folder import Folder
 from .data import Show
-from .library import Library
+from .asset_library import AssetLibrary
 
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, Undefined
@@ -33,14 +33,12 @@ class Instance:
         self._show_file: SaveFile = SaveFile(self._show_folder, self._shows, "Shows")
         """ Save file for show dictionary """
 
-        self.library: Library = Library(self._main_folder_path)
+        self.library: AssetLibrary = AssetLibrary(self._main_folder_path)
         """ Asset library reference """
 
         self.get_show = self._shows.data.get
 
-        self.load_shows = self._show_file.load
-
-    @autosave("show_file")
+    @autosave("_show_file")
     def create_show(self, show_name: str):
         if show_name in self._shows.data:
             if DEBUG:
@@ -51,7 +49,7 @@ class Instance:
         self._shows.data[show_name] = Show()
         self._show_folder.setup_subfolder(show_name)
 
-    @autosave("show_file")
+    @autosave("_show_file")
     def delete_show(self, show_name: str):
         if show_name not in self._shows.data:
             if DEBUG:
@@ -62,11 +60,11 @@ class Instance:
         self._show_folder.delete_subfolder(show_name)
         self._shows.data.pop(show_name)
 
-    @autosave("show_file")
+    @autosave("_show_file")
     def set_show_data(self, show_name: str, show_json: str):
         self._shows.data[show_name].from_json(show_json, undefine=Undefined.EXCLUDE)
 
-    @autosave("show_file")
+    @autosave("_show_file")
     def create_shot(self, show_name, shot_name) -> str:
         uuid = self.library.create(shot_name, "Shot")
         self._shows.data[show_name].shots.append(uuid)

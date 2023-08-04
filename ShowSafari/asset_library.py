@@ -23,7 +23,7 @@ class LibraryData:
     type_index: Dict[str, Set[str]] = field(default_factory=dict)
 
 
-class Library:
+class AssetLibrary:
     def __init__(self, location_path):
         self._folder: Folder = Folder(location_path, "Library")
         self._assets: LibraryData = LibraryData()
@@ -68,15 +68,15 @@ class Library:
 
     @autosave("_save_file")
     def remove(self, asset_uuid: str):
-        # Remove the folder
-        self._folder.delete_subfolder(asset_uuid)
-
         # Unlink any assets connected to this asset
         for used_asset in self.get(asset_uuid).assets_used:
-            self.disconnect_asset(asset_uuid, used_asset)
+            self.disconnect(asset_uuid, used_asset)
 
         for used_by_asset in self.get(asset_uuid).assets_used_by:
-            self.disconnect_asset(used_by_asset, asset_uuid)
+            self.disconnect(used_by_asset, asset_uuid)
+
+        # Remove the folder
+        self._folder.delete_subfolder(asset_uuid)
 
         # Delete the asset from the data container
         asset = self._assets.data.pop(asset_uuid)
@@ -89,20 +89,20 @@ class Library:
         self.remove(asset_uuid)
 
     @autosave("_save_file")
-    def connect_asset(self, parent_asset: str, child_asset: str):
+    def connect(self, parent_asset: str, child_asset: str):
         self.get(parent_asset).assets_used.add(child_asset)
         self.get(child_asset).assets_used_by.add(parent_asset)
 
     @autosave("_save_file")
-    def disconnect_asset(self, parent_asset: str, child_asset: str):
+    def disconnect(self, parent_asset: str, child_asset: str):
         self.get(parent_asset).assets_used.remove(child_asset)
         self.get(child_asset).assets_used_by.remove(parent_asset)
 
     @autosave("_save_file")
-    def set_asset_data(self, asset_id: str, asset_json: str):
+    def set_data(self, asset_id: str, asset_json: str):
         self.get(asset_id).from_json(asset_json, undefine=Undefined.EXCLUDE)
 
-    def get_asset_data(self, asset_id):
+    def get_data(self, asset_id):
         return self.get(asset_id).to_json()
 
     def get_by_name(self, asset_name):
