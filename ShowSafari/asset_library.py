@@ -22,9 +22,11 @@ class AssetLibrary:
         self._folder: Folder = Folder(location_path, "Library")
         self._assets: LibraryData = LibraryData()
         self._save_file: SaveFile = SaveFile(self._folder, self._assets, "Library")
-
-        self.get = self._assets.data.get
         self._save_file.load()
+
+    def __getitem__(self, item: str):
+        """ This method receives a UUID and return an asset contained in the Library """
+        return self._assets.data[item]
 
     @autosave("_save_file")
     def create(self, asset_name: str, asset_type: str = "Undefined") -> str:
@@ -62,10 +64,10 @@ class AssetLibrary:
     @autosave("_save_file")
     def remove(self, asset_uuid: str):
         # Unlink any assets connected to this asset
-        for used_asset in self.get(asset_uuid).assets_used:
+        for used_asset in self[asset_uuid].assets_used:
             self.disconnect(asset_uuid, used_asset)
 
-        for used_by_asset in self.get(asset_uuid).assets_used_by:
+        for used_by_asset in self[asset_uuid].assets_used_by:
             self.disconnect(used_by_asset, asset_uuid)
 
         # Remove the folder
@@ -83,20 +85,21 @@ class AssetLibrary:
 
     @autosave("_save_file")
     def connect(self, parent_asset: str, child_asset: str):
-        self.get(parent_asset).assets_used.add(child_asset)
-        self.get(child_asset).assets_used_by.add(parent_asset)
+        print(self._assets.data)
+        self[parent_asset].assets_used.add(child_asset)
+        self[child_asset].assets_used_by.add(parent_asset)
 
     @autosave("_save_file")
     def disconnect(self, parent_asset: str, child_asset: str):
-        self.get(parent_asset).assets_used.remove(child_asset)
-        self.get(child_asset).assets_used_by.remove(parent_asset)
+        self[parent_asset].assets_used.remove(child_asset)
+        self[child_asset].assets_used_by.remove(parent_asset)
 
     @autosave("_save_file")
     def set_data(self, asset_id: str, asset_json: str):
-        self.get(asset_id).from_json(asset_json, undefine=Undefined.EXCLUDE)
+        self[asset_id].from_json(asset_json, undefine=Undefined.EXCLUDE)
 
     def get_data(self, asset_id):
-        return self.get(asset_id).to_json()
+        return self[asset_id].to_json()
 
     def get_by_name(self, asset_name):
         for uuid, asset in self._assets.data.items():

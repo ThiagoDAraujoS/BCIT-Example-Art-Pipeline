@@ -10,7 +10,7 @@ from dataclasses_json import dataclass_json, Undefined
 import os.path
 from typing import Dict
 
-DEBUG = True
+IGNORE_ERRORS = True
 
 
 @dataclass_json
@@ -36,13 +36,12 @@ class Instance:
         self.library: AssetLibrary = AssetLibrary(self._main_folder_path)
         """ Asset library reference """
 
-        self.get_show = self._shows.data.get
         self._show_file.load()
 
     @autosave("_show_file")
     def create_show(self, show_name: str):
         if show_name in self._shows.data:
-            if DEBUG:
+            if IGNORE_ERRORS:
                 return
             else:
                 raise KeyError(f"Show {show_name} already presented in shows collection")
@@ -53,7 +52,7 @@ class Instance:
     @autosave("_show_file")
     def delete_show(self, show_name: str):
         if show_name not in self._shows.data:
-            if DEBUG:
+            if IGNORE_ERRORS:
                 return
             else:
                 raise KeyError(f"Show {show_name} not presented in shows collection")
@@ -76,8 +75,12 @@ class Instance:
 
     def get_show_folder(self, show_name) -> str | None:
         if show_name not in self._shows.data:
-            if DEBUG:
+            if IGNORE_ERRORS:
                 raise KeyError(f"Show {show_name} not presented in shows collection")
             else:
                 return None
         return self._show_folder.get_subfolder_path(show_name)
+
+    def get_show(self, item: str):
+        """ This method receives a UUID and return a show object """
+        return self._shows.data[item]
