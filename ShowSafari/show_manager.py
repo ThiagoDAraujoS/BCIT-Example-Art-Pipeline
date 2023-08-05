@@ -12,7 +12,7 @@ from . import UUIDString, JsonString, PathString, TypeString, error
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, Undefined
 import os.path
-from typing import Dict, Set, Callable
+from typing import Dict, Set, Callable, Any
 
 
 @dataclass_json
@@ -44,7 +44,7 @@ class ShowManager:
         self._save_file.load()
 
     @staticmethod
-    def validate_show_name(func: Callable):
+    def validate_show_name(func: Callable) -> Callable:
         """ This decorator checks if the first argument 'show_name' exists in the _shows dictionary
 
             Methods decorated by this decorator need to use their first argument as a show_name id

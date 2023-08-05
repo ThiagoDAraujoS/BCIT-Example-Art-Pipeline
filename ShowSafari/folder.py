@@ -32,7 +32,7 @@ class Folder:
         return self._path
 
     @path.setter
-    def path(self, folder_path: PathString):
+    def path(self, folder_path: PathString) -> None:
         """ Set the full path to the folder.
 
         Parameters:

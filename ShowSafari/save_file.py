@@ -10,7 +10,7 @@ import os.path
 
 
 class SaveFile:
-    def __init__(self, folder: Folder, data_reference: dataclass_json, file_name: str = "file"):
+    def __init__(self, folder: Folder, data_reference: dataclass_json, file_name: str = "file") -> None:
         """ Initializes a SaveFile object.
 
             If a physical file does not exist a new one will be generated.
