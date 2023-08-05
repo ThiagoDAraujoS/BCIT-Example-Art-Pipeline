@@ -57,7 +57,7 @@ class Asset:
         return new_asset_type(asset_name, asset_type)
 
 
-@dataclass_json
+@dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Shot(Asset):
     """ Represents a shot, a type of asset."""
@@ -67,7 +67,7 @@ class Shot(Asset):
     environments: Set[str] = field(default_factory=set)
 
 
-@dataclass_json
+@dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Sound(Asset):
     """ Represents a sound asset."""
@@ -76,7 +76,7 @@ class Sound(Asset):
     bitrate: int = 128
 
 
-@dataclass_json
+@dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Model(Asset):
     """ Represents a 3D model asset."""
@@ -84,7 +84,7 @@ class Model(Asset):
     faces: int = 0
 
 
-@dataclass_json
+@dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Show:
     """ Represents a TV show or series. """
@@ -96,7 +96,6 @@ class Show:
     countries_of_origin: Set[str] = field(default_factory=set)
     third_party_services: Set[str] = field(default_factory=set)
     shots: List[str] = field(default_factory=list)
-    archived: bool = False
 
 
 ASSET_TYPES: Dict[TypeString, Type[Asset]] = {

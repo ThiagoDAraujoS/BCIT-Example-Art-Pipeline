@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import dataclasses
+import json
+
 from .save_file import SaveFile, autosave
 from .folder import Folder
 from .data import Show
@@ -9,7 +12,7 @@ from . import UUIDString, JsonString, PathString, TypeString, error
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, Undefined
 import os.path
-from typing import Dict, Set
+from typing import Dict, Set, Callable
 
 
 @dataclass_json
@@ -26,21 +29,36 @@ class ShowManager:
         self._main_folder_path: PathString = os.path.normpath(main_folder_path)
         """ Main folder path """
 
-        self._show_folder: Folder = Folder(self._main_folder_path, ShowManager.FOLDER_NAME)
+        self._folder: Folder = Folder(self._main_folder_path, ShowManager.FOLDER_NAME)
         """ Show folder representation """
 
         self._shows: ShowsData = ShowsData()
         """ Dictionary of Shows """
 
-        self._show_file: SaveFile = SaveFile(self._show_folder, self._shows, ShowManager.FOLDER_NAME)
+        self._save_file: SaveFile = SaveFile(self._folder, self._shows, ShowManager.FOLDER_NAME)
         """ Save file for show dictionary """
 
         self._library: AssetLibrary = library_reference
         """ Asset library reference """
 
-        self._show_file.load()
+        self._save_file.load()
 
-    @autosave("_show_file")
+    @staticmethod
+    def validate_show_name(func: Callable):
+        """ This decorator checks if the first argument 'show_name' exists in the _shows dictionary
+
+            Methods decorated by this decorator need to use their first argument as a show_name id
+            this id will be then checked against _shows.data and the method will be terminated or
+            an error will be raised if the show_name does not exist in the _shows.data
+        """
+        def inner(self, show_name: str, *args, **kwargs):
+            if show_name not in self._shows.data:
+                return error(KeyError, "Invalid show name")
+            result = func(self, show_name, *args, **kwargs)
+            return result
+        return inner
+
+    @autosave("_save_file")
     def create_show(self, show_name: str) -> None:
         """ Create a new show and add it to the shows' collection.
 
@@ -61,9 +79,10 @@ class ShowManager:
             return error(KeyError, f"Show {show_name} already presented in shows collection")
 
         self._shows.data[show_name] = Show()
-        self._show_folder.setup_subfolder(show_name)
+        self._folder.setup_subfolder(show_name)
 
-    @autosave("_show_file")
+    @validate_show_name
+    @autosave("_save_file")
     def delete_show(self, show_name: str) -> None:
         """ Delete a show and its associated data from the shows' collection.
 
@@ -80,13 +99,11 @@ class ShowManager:
         Example usage:
             library.delete_show("My Show")
         """
-        if show_name not in self._shows.data:
-            return error(KeyError, f"Show {show_name} not presented in shows collection")
-
-        self._show_folder.delete_subfolder(show_name)
+        self._folder.delete_subfolder(show_name)
         self._shows.data.pop(show_name)
 
-    @autosave("_show_file")
+    @validate_show_name
+    @autosave("_save_file")
     def set_show_data(self, show_name: str, show_json: JsonString) -> None:
         """ Set data for a show in the AssetLibrary.
 
@@ -97,9 +114,19 @@ class ShowManager:
         Example usage:
             library.set_show_data("My Show", '{"key": "value"}')
         """
-        self._shows.data[show_name].from_json(show_json, undefine=Undefined.EXCLUDE)
+        new_data = json.loads(show_json)
+        for key in "shots":
+            if key in new_data:
+                return error(PermissionError, f"{key}, cannot be manipulated through set_data")
 
-    @autosave("_show_file")
+        loaded_instance = self[show_name].from_json(show_json)
+
+        for dataclass_field in dataclasses.fields(self[show_name]):
+            loaded_value = getattr(loaded_instance, dataclass_field.name)
+            setattr(self[show_name], dataclass_field.name, loaded_value)
+
+    @validate_show_name
+    @autosave("_save_file")
     def create_shot(self, show_name: str, shot_name: str) -> UUIDString:
         """ Create a new shot and add it to a show in the AssetLibrary.
 
@@ -117,6 +144,7 @@ class ShowManager:
         self._shows.data[show_name].shots.append(uuid)
         return uuid
 
+    @validate_show_name
     def get_show_data(self, show_name: str) -> JsonString:
         """ Get data for a show in the AssetLibrary.
 
@@ -131,6 +159,7 @@ class ShowManager:
         """
         return self._shows.data[show_name].to_json()
 
+    @validate_show_name
     def get_show_folder(self, show_name: str) -> PathString | None:
         """ Get the folder path for a show in the AssetLibrary.
 
@@ -143,15 +172,14 @@ class ShowManager:
         Example usage:
             folder_path = library.get_show_folder("My Show")
         """
-        if show_name not in self._shows.data:
-            return error(KeyError, f"Show {show_name} not presented in shows collection")
-        return self._show_folder.get_absolute_path(show_name)
+        return self._folder.get_absolute_path(show_name)
 
-    def get_show(self, name: str) -> Show:
+    @validate_show_name
+    def __getitem__(self, show_name):
         """ Get a show object from the shows' collection.
 
         Parameters:
-            name (str): The name of the show to retrieve.
+            show_name (str): The name of the show to retrieve.
 
         Returns:
             Show: The show object for the specified show name.
@@ -159,7 +187,7 @@ class ShowManager:
         Example usage:
             show = library.get_show("My Show")
         """
-        return self._shows.data[name]
+        return self._shows.data[show_name]
 
     def get_show_names(self) -> Set[str]:
         """ Get a list of show names in the collection.
