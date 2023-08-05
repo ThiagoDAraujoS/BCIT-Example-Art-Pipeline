@@ -4,7 +4,7 @@ from .save_file import SaveFile, autosave
 from .folder import Folder
 from .data import Show
 from .asset_library import AssetLibrary
-from . import UUIDString, JsonString, PathString, TypeString, ERROR
+from . import UUIDString, JsonString, PathString, TypeString, error
 
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, Undefined
@@ -58,7 +58,7 @@ class ShowManager:
             library.create_show("My Show")
         """
         if show_name in self._shows.data:
-            return ERROR(KeyError, f"Show {show_name} already presented in shows collection")
+            return error(KeyError, f"Show {show_name} already presented in shows collection")
 
         self._shows.data[show_name] = Show()
         self._show_folder.setup_subfolder(show_name)
@@ -81,7 +81,7 @@ class ShowManager:
             library.delete_show("My Show")
         """
         if show_name not in self._shows.data:
-            return ERROR(KeyError, f"Show {show_name} not presented in shows collection")
+            return error(KeyError, f"Show {show_name} not presented in shows collection")
 
         self._show_folder.delete_subfolder(show_name)
         self._shows.data.pop(show_name)
@@ -144,7 +144,7 @@ class ShowManager:
             folder_path = library.get_show_folder("My Show")
         """
         if show_name not in self._shows.data:
-            return ERROR(KeyError, f"Show {show_name} not presented in shows collection")
+            return error(KeyError, f"Show {show_name} not presented in shows collection")
         return self._show_folder.get_absolute_path(show_name)
 
     def get_show(self, name: str) -> Show:
@@ -171,4 +171,3 @@ class ShowManager:
             show = library.get_show("My Show")
         """
         return set(self._shows.data.keys())
-

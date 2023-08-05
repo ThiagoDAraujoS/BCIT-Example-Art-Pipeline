@@ -6,7 +6,7 @@ from .folder import Folder
 from .save_file import SaveFile, autosave
 from .data import *
 from . import UUIDString, JsonString, PathString, TypeString
-from . import AssetArchiveError, ConnectToSelfError, ERROR
+from . import AssetArchiveError, ConnectToSelfError, error
 
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, Undefined
@@ -119,7 +119,7 @@ class AssetLibrary:
             Archived assets cannot have their dependencies changed and must be kept for historical purposes.
         """
         if any([self[used_by].archived for used_by in self[asset_uuid].assets_used_by]):
-            return ERROR(AssetArchiveError, "Cannot remove the asset while it has archived assets depending on it.")
+            return error(AssetArchiveError, "Cannot remove the asset while it has archived assets depending on it.")
 
         # Unlink any assets connected to this asset
         for used_asset in self[asset_uuid].assets_used:
@@ -151,7 +151,7 @@ class AssetLibrary:
             library.archive("12345678-1234-5678-1234-567812345678")
         """
         if self[asset_uuid].archived:
-            return ERROR(AssetArchiveError, "Library can't archive an asset already archived")
+            return error(AssetArchiveError, "Library can't archive an asset already archived")
 
         self._folder.archive_subfolder(asset_uuid)
         self[asset_uuid].archived = True
@@ -175,7 +175,7 @@ class AssetLibrary:
             Unpacking an asset that is already active will have no effect.
         """
         if not self[asset_uuid].archived:
-            return ERROR(AssetArchiveError, "Library can't unpack an unarchived asset")
+            return error(AssetArchiveError, "Library can't unpack an unarchived asset")
 
         self._folder.unpack_subfolder(asset_uuid)
         self[asset_uuid].archived = False
@@ -200,10 +200,10 @@ class AssetLibrary:
             library.connect("12345678-1234-5678-1234-567812345678", "87654321-4321-8765-4321-876543210987")
         """
         if parent_asset == child_asset:
-            return ERROR(ConnectToSelfError, "Connecting an asset to itself is not allowed.")
+            return error(ConnectToSelfError, "Connecting an asset to itself is not allowed.")
 
         if self[parent_asset].archived:
-            return ERROR(AssetArchiveError, "Archived Assets can't have elements added to their 'asset_used' set")
+            return error(AssetArchiveError, "Archived Assets can't have elements added to their 'asset_used' set")
 
         self[parent_asset].assets_used.add(child_asset)
         self[child_asset].assets_used_by.add(parent_asset)
@@ -228,10 +228,10 @@ class AssetLibrary:
             library.disconnect("12345678-1234-5678-1234-567812345678", "87654321-4321-8765-4321-876543210987")
         """
         if parent_asset == child_asset:
-            return ERROR(ConnectToSelfError, "Disconnecting an asset to itself is not allowed.")
+            return error(ConnectToSelfError, "Disconnecting an asset to itself is not allowed.")
 
         if self[parent_asset].archived:
-            return ERROR(AssetArchiveError, "Archived Assets can't have elements removed from their 'asset_used' set")
+            return error(AssetArchiveError, "Archived Assets can't have elements removed from their 'asset_used' set")
 
         self[parent_asset].assets_used.remove(child_asset)
         self[child_asset].assets_used_by.remove(parent_asset)
@@ -254,7 +254,7 @@ class AssetLibrary:
             library.set_data("12345678-1234-5678-1234-567812345678", '{"key": "value"}')
         """
         if self[asset_id].archived:
-            return ERROR(AssetArchiveError, "Cannot set data for an archived asset.")
+            return error(AssetArchiveError, "Cannot set data for an archived asset.")
 
         self[asset_id].from_json(asset_json, undefine=Undefined.EXCLUDE)
 

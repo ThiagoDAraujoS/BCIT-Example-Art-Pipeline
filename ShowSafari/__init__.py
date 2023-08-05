@@ -20,7 +20,7 @@ PathString = NewType('PathString', str)
 IGNORE_ERRORS = False
 
 
-def ERROR(error_type: Type[Exception], message: str):
+def error(error_type: Type[Exception], message: str):
     if IGNORE_ERRORS:
         print(message)
     else:
