@@ -1,4 +1,6 @@
-from datetime import datetime, date, time
+from . import UUIDString, TypeString
+
+from datetime import date, time
 from typing import Set, List, Dict, Type
 from dataclasses_json import dataclass_json
 from dataclasses import field, dataclass
@@ -16,17 +18,18 @@ class Asset:
         assets_used_by (Set[str(UUID)]): Set of UUIDs representing assets using this asset.
     """
     name: str
-    _asset_type: str
-    assets_used: Set[str] = field(default_factory=set)
-    assets_used_by: Set[str] = field(default_factory=set)
+    _asset_type: TypeString
+    assets_used: Set[UUIDString] = field(default_factory=set)
+    assets_used_by: Set[UUIDString] = field(default_factory=set)
+    archived: bool = False
 
     @property
-    def asset_type(self):
+    def asset_type(self) -> TypeString:
         """ Get the type of the asset. """
         return self._asset_type
 
     @staticmethod
-    def create_asset(asset_name: str, asset_type: str) -> "Asset":
+    def create_asset(asset_name: str, asset_type: TypeString) -> "Asset":
         """ Factory method that generates a specialized Asset object.
 
             This method creates an instance of a specialized Asset object based on the provided
@@ -48,6 +51,8 @@ class Asset:
         """
         asset_type = asset_type.replace("_", " ").capitalize().strip()
         asset_type = re.sub(r'[^\w\s]*$', '', asset_type)
+        asset_type = TypeString(asset_type)
+
         new_asset_type: Type = ASSET_TYPES.get(asset_type, Asset)
         return new_asset_type(asset_name, asset_type)
 
@@ -57,7 +62,7 @@ class Asset:
 class Shot(Asset):
     """ Represents a shot, a type of asset."""
     clip_number: int = -1
-    length: time = field(default_factory=lambda: datetime.now().time())
+    length: time = field(default_factory=lambda: time(0, 0, 0))
     characters: Set[str] = field(default_factory=set)
     environments: Set[str] = field(default_factory=set)
 
@@ -91,9 +96,11 @@ class Show:
     countries_of_origin: Set[str] = field(default_factory=set)
     third_party_services: Set[str] = field(default_factory=set)
     shots: List[str] = field(default_factory=list)
+    archived: bool = False
 
 
-ASSET_TYPES: Dict[str, Type[Asset]] = {asset_type.__name__: asset_type for asset_type in Asset.__subclasses__()}
+ASSET_TYPES: Dict[TypeString, Type[Asset]] = {
+    TypeString(asset_type.__name__): asset_type for asset_type in Asset.__subclasses__()}
 """ Dictionary containing all type names related to their type representation.
     This map allows you to pass a name ex: "Shot" and get the type Shot from it
     It automatically maps all existing variations of asset """

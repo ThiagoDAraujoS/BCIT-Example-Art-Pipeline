@@ -1,6 +1,7 @@
 import inspect
 
 from .folder import Folder
+from . import PathString
 
 import dataclasses
 from dataclasses_json import dataclass_json
@@ -30,7 +31,7 @@ class SaveFile:
         self._folder: Folder = folder
         """ The folder where the data file will be saved """
 
-        self._file_path: str = os.path.join(self._folder.path, f"{file_name}.json")
+        self._file_path: PathString = PathString(os.path.join(self._folder.path, f"{file_name}.json"))
 
         """ The path of the JSON file to be saved/loaded """
         if not self.exists():
@@ -39,17 +40,13 @@ class SaveFile:
             self.load()
 
     def save(self) -> None:
-        """
-        Serializes and saves the dataclass object to a JSON file with indentation.
-        """
+        """ Serializes and saves the dataclass object to a JSON file with indentation. """
         json_string = self._data_reference.to_json(indent=2)
         with open(self._file_path, 'w') as file:
             file.write(json_string)
 
-    def load(self):
-        """
-        Loads the data from the existing JSON file into the dataclass object.
-        """
+    def load(self) -> None:
+        """ Loads the data from the existing JSON file into the dataclass object. """
         with open(self._file_path, 'r') as file:
             data_string = file.read()
 
@@ -60,8 +57,7 @@ class SaveFile:
             setattr(self._data_reference, field.name, loaded_value)
 
     def exists(self) -> bool:
-        """
-        Checks if the JSON file exists in the specified folder.
+        """ Checks if the JSON file exists in the specified folder.
 
         Returns:
             bool: True if the file exists, False otherwise.
@@ -70,12 +66,11 @@ class SaveFile:
 
 
 def autosave(field_name: str):
-    """
-    Decorator to save a file associated with an instance after the decorated method is executed.
+    """ Decorator to save a file associated with an instance after the decorated method is executed.
 
-    This decorator is designed to work with a class instance that contains a `SaveFile` attribute.
-    It saves the file using the provided reference attribute after the decorated method is executed,
-    ensuring that the changes made during the method call are persisted.
+        This decorator is designed to work with a class instance that contains a `SaveFile` attribute.
+        It saves the file using the provided reference attribute after the decorated method is executed,
+        ensuring that the changes made during the method call are persisted.
 
     Parameters:
         field_name (str): The name of the attribute that holds the `SaveFile` instance in the class.
@@ -92,7 +87,7 @@ def autosave(field_name: str):
             def __init__(self):
                 self._save_file = SaveFile()
 
-            @SaveFile.save_when_done("_save_file")
+            @SaveFile.autosave("_save_file")
             def my_method(self, data):
                 # Method implementation that modifies the data
                 print("Method executed.")
@@ -101,19 +96,18 @@ def autosave(field_name: str):
         obj.my_method("some data")
         # After the method execution, the associated file is saved automatically.
     """
-
     def inner(func: Callable):
         def wrapper(self, *args, **kwargs):
+
             if inspect.isclass(self) or inspect.ismethod(func):
-                raise ValueError("Decorator save_when_done cannot be used on static methods or class methods.")
+                raise ValueError("Decorator autosave cannot be used on static methods or class methods.")
 
             if not hasattr(self, field_name):
                 raise AttributeError(f"Attribute '{field_name}' not found in the class instance.")
 
             result = func(self, *args, **kwargs)
             getattr(self, field_name).save()
+
             return result
-
         return wrapper
-
     return inner
