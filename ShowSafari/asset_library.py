@@ -46,8 +46,23 @@ class AssetLibrary:
         self._save_file: SaveFile = SaveFile(self._folder, self._assets, AssetLibrary.FOLDER_NAME)
         self._save_file.load()
 
-    def __getitem__(self, item: str):
-        """ This method receives a UUID and return an asset contained in the Library """
+    def __getitem__(self, item: UUIDString) -> Asset:
+        """ Retrieve an asset from the AssetLibrary by its UUID.
+
+        Parameters:
+            item (UUIDString): The UUID (Universally Unique Identifier) of the asset to be retrieved.
+
+        Returns:
+            Asset: The asset corresponding to the provided UUID.
+
+        Raises:
+            KeyError: If the provided UUID does not exist in the AssetLibrary.
+
+        Example usage:
+            library = AssetLibrary("/path/to/asset/library")
+            asset = library["12345678-1234-5678-1234-567812345678"]
+        """
+        item = os.path.splitext(item)[0]
         return self._assets.data[item]
 
     @autosave("_save_file")
@@ -84,7 +99,28 @@ class AssetLibrary:
         return UUIDString(uuid)
 
     @autosave("_save_file")
-    def remove(self, asset_uuid: str):
+    def remove(self, asset_uuid: UUIDString) -> None:
+        """ Remove an asset from the AssetLibrary.
+
+            This method unlinks any assets connected to the target asset and then removes the asset from the AssetLibrary.
+
+        Parameters:
+            asset_uuid (UUIDString): The UUID of the asset to be removed.
+
+        Raises:
+            AssetArchiveError: If the asset to be removed has archived assets depending on it.
+
+        Example usage:
+            library = AssetLibrary("/path/to/asset/library")
+            library.remove("12345678-1234-5678-1234-567812345678")
+
+        Note:
+            Removing an asset that has archived assets depending on it will raise an AssetArchiveError.
+            Archived assets cannot have their dependencies changed and must be kept for historical purposes.
+        """
+        if any([self[used_by].archived for used_by in self[asset_uuid].assets_used_by]):
+            return ERROR(AssetArchiveError, "Cannot remove the asset while it has archived assets depending on it.")
+
         # Unlink any assets connected to this asset
         for used_asset in self[asset_uuid].assets_used:
             self.disconnect(asset_uuid, used_asset)
@@ -101,23 +137,125 @@ class AssetLibrary:
             self._assets.type_index[asset.asset_type].remove(asset_uuid)
 
     @autosave("_save_file")
-    def archive(self, asset_uuid: str):
-        # TODO ZIP A FOLDER I MIGHT IMPLEMENT THIS ON FOLDER
-        self.remove(asset_uuid)
+    def archive(self, asset_uuid: UUIDString) -> None:
+        """ Archive an asset in the AssetLibrary.
+
+            This method creates a ZIP archive of the asset's folder, removes the asset from the AssetLibrary,
+            and saves the changes.
+
+        Parameters:
+            asset_uuid (UUIDString): The UUID of the asset to be archived.
+
+        Example usage:
+            library = AssetLibrary("/path/to/asset/library")
+            library.archive("12345678-1234-5678-1234-567812345678")
+        """
+        if self[asset_uuid].archived:
+            return ERROR(AssetArchiveError, "Library can't archive an asset already archived")
+
+        self._folder.archive_subfolder(asset_uuid)
+        self[asset_uuid].archived = True
 
     @autosave("_save_file")
-    def connect(self, parent_asset: str, child_asset: str):
-        print(self._assets.data)
+    def unpack(self, asset_uuid: UUIDString) -> None:
+        """ Unpack an archived asset in the AssetLibrary.
+
+            This method unpacks the contents of an archived asset, making it available again for use.
+            The asset must have been previously archived using the `archive` method.
+
+        Parameters:
+            asset_uuid (UUIDString): The UUID of the asset to be unpacked.
+
+        Example usage:
+            library = AssetLibrary("/path/to/asset/library")
+            library.unpack("12345678-1234-5678-1234-567812345678")
+
+        Note:
+            After unpacking, the asset becomes active again and can be used normally.
+            Unpacking an asset that is already active will have no effect.
+        """
+        if not self[asset_uuid].archived:
+            return ERROR(AssetArchiveError, "Library can't unpack an unarchived asset")
+
+        self._folder.unpack_subfolder(asset_uuid)
+        self[asset_uuid].archived = False
+
+    @autosave("_save_file")
+    def connect(self, parent_asset: UUIDString, child_asset: UUIDString) -> None:
+        """ Connect two assets in the AssetLibrary.
+
+            This method establishes a connection between a parent asset and a child asset by adding their UUIDs
+            to each other's 'assets_used' and 'assets_used_by' attributes.
+
+        Parameters:
+            parent_asset (UUIDString): The UUID of the parent asset.
+            child_asset (UUIDString): The UUID of the child asset.
+
+        Raises:
+            AssetArchiveError: If the parent asset is archived and cannot have its connections changed.
+            ConnectToSelfError: If parent id and child id is the same value.
+
+        Example usage:
+            library = AssetLibrary("/path/to/asset/library")
+            library.connect("12345678-1234-5678-1234-567812345678", "87654321-4321-8765-4321-876543210987")
+        """
+        if parent_asset == child_asset:
+            return ERROR(ConnectToSelfError, "Connecting an asset to itself is not allowed.")
+
+        if self[parent_asset].archived:
+            return ERROR(AssetArchiveError, "Archived Assets can't have elements added to their 'asset_used' set")
+
         self[parent_asset].assets_used.add(child_asset)
         self[child_asset].assets_used_by.add(parent_asset)
 
     @autosave("_save_file")
-    def disconnect(self, parent_asset: str, child_asset: str):
+    def disconnect(self, parent_asset: UUIDString, child_asset: UUIDString) -> None:
+        """ Disconnect two assets in the AssetLibrary.
+
+            This method removes the connection between a parent asset and a child asset by removing their UUIDs
+            from each other's 'assets_used' and 'assets_used_by' attributes.
+
+        Parameters:
+            parent_asset (UUIDString): The UUID of the parent asset.
+            child_asset (UUIDString): The UUID of the child asset.
+
+        Raises:
+            AssetArchiveError: If the parent asset is archived and cannot have its connections changed.
+            ConnectToSelfError: If parent id and child id is the same value.
+
+        Example usage:
+            library = AssetLibrary("/path/to/asset/library")
+            library.disconnect("12345678-1234-5678-1234-567812345678", "87654321-4321-8765-4321-876543210987")
+        """
+        if parent_asset == child_asset:
+            return ERROR(ConnectToSelfError, "Disconnecting an asset to itself is not allowed.")
+
+        if self[parent_asset].archived:
+            return ERROR(AssetArchiveError, "Archived Assets can't have elements removed from their 'asset_used' set")
+
         self[parent_asset].assets_used.remove(child_asset)
         self[child_asset].assets_used_by.remove(parent_asset)
 
     @autosave("_save_file")
-    def set_data(self, asset_id: str, asset_json: str):
+    def set_data(self, asset_id: UUIDString, asset_json: JsonString) -> None:
+        """ Set data for an asset in the AssetLibrary.
+
+            This method sets data for an asset specified by its UUID using a JSON string representation.
+
+        Parameters:
+            asset_id (UUIDString): The UUID of the asset to set data for.
+            asset_json (JsonString): The JSON string representing the data to be set.
+
+        Raises:
+            AssetArchiveError: If the asset with the given UUID is archived and cannot have its data changed.
+
+        Example usage:
+            library = AssetLibrary("/path/to/asset/library")
+            library.set_data("12345678-1234-5678-1234-567812345678", '{"key": "value"}')
+        """
+        if self[asset_id].archived:
+            return ERROR(AssetArchiveError, "Cannot set data for an archived asset.")
+
         self[asset_id].from_json(asset_json, undefine=Undefined.EXCLUDE)
 
     def get_data(self, asset_id: UUIDString) -> JsonString:

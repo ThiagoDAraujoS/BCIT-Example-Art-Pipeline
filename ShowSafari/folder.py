@@ -126,7 +126,81 @@ class Folder:
         subfolder_path = self.get_absolute_path(subfolder_name)
         return os.path.exists(subfolder_path)
 
-    def __repr__(self) -> str:
+    def archive_subfolder(self, subfolder_name: str) -> PathString:
+        """ Archive a subfolder within the main folder into a ZIP file.
+
+        Parameters:
+            subfolder_name (str): The name of the subfolder to be archived.
+
+        Raises:
+            FileNotFoundError: If the specified subfolder doesn't exist.
+            FileExistsError: If an archive file with the same name as the subfolder already exists.
+
+        Notes:
+            - The method creates a ZIP archive of the subfolder contents with the same name as the subfolder.
+            - The original subfolder will be removed after archiving.
+
+        Returns:
+            PathString or None: The path to the created archive file.
+        """
+        path = self.get_absolute_path(subfolder_name)
+        archive_name = f"{subfolder_name}.zip"
+
+        if os.path.exists(self.get_absolute_path(archive_name)):
+            raise FileNotFoundError(f"Archive file '{archive_name}' already exists and cannot be archived again.")
+
+        if not self.subfolder_exists(subfolder_name):
+            raise FileExistsError(f"Subfolder '{subfolder_name}' does not exist.")
+
+        if not os.listdir(path):
+            raise EmptyFolderError(f"Error archiving {subfolder_name}, Cannot archive an empty folder.")
+
+        shutil.make_archive(path, 'zip', path)
+        shutil.rmtree(path)
+        return PathString(archive_name)
+
+    def unpack_subfolder(self, archive_name: str) -> str:
+        """ Unpack an archived subfolder.
+
+            This method extracts the contents of an archived subfolder, making it available for use.
+            The subfolder must have been previously archived using the `archive_subfolder` method.
+
+        Parameters:
+            archive_name (str): The name of the archived subfolder to be unpacked.
+
+        Returns:
+            str: The name of the unpacked subfolder.
+
+        Example usage:
+            library = YourClassName("/path/to/asset/library")
+            unpacked_subfolder = library.unpack_subfolder("my_archived_subfolder")
+
+        Raises:
+            FileNotFoundError: If the archive .zip file is not found.
+            FileExistsError: If the subfolder to be unpacked already exists.
+
+        Note:
+            After unpacking, the subfolder's contents become accessible again and the archive will be deleted.
+        """
+        if not archive_name.endswith(".zip"):
+            archive_name += ".zip"
+
+        archive_path = self.get_absolute_path(archive_name)
+
+        if not os.path.exists(archive_path):
+            raise FileNotFoundError(f"Archive .zip file '{archive_name}' not found.")
+
+        subfolder_name = os.path.splitext(archive_name)[0]
+        subfolder_path = os.path.splitext(archive_path)[0]
+
+        if os.path.exists(subfolder_path):
+            raise FileExistsError(f"Subfolder '{subfolder_name}' already exists and cannot be unpacked again.")
+
+        shutil.unpack_archive(archive_path, subfolder_path, 'zip')
+        os.remove(archive_path)
+        return subfolder_name
+
+    def __repr__(self) -> PathString:
         return self.path
 
     def __str__(self) -> str:
