@@ -32,7 +32,7 @@ class TestSaveFile(TestSetup):
             data_string = file.read()
         loaded_data = self.data.from_json(data_string)
 
-        self.assertEqual(loaded_data.data, self.data.data)
+        self.assertEqual(loaded_data.data, self.data.data, "Saved data does not match object data")
 
     def test_load(self):
         new_data: dataclass_json = TestData()
@@ -43,9 +43,9 @@ class TestSaveFile(TestSetup):
             file.write(json_string)
 
         self.save_file.load()
-        self.assertEqual(self.data.data, new_data.data)
+        self.assertEqual(self.data.data, new_data.data, "Loaded data does not match object data")
 
     def test_exists(self):
-        self.assertTrue(self.save_file.exists())
+        self.assertTrue(self.save_file.exists(), "save_file_exists returns False even though the file exists")
         os.remove(self.save_file._file_path)
-        self.assertFalse(self.save_file.exists())
+        self.assertFalse(self.save_file.exists(), "save_file_exists returns True even though the file does not exists")
