@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import dataclasses
+import json
 import os
 
 from .folder import Folder
@@ -10,7 +12,7 @@ from . import AssetArchiveError, ConnectToSelfError, error
 
 from dataclasses import dataclass, field
 from dataclasses_json import dataclass_json, Undefined
-from typing import Dict
+from typing import Dict, Any
 from uuid import uuid4 as generate_uuid
 
 
@@ -95,7 +97,6 @@ class AssetLibrary:
 
         # Setup a folder for the asset
         self._folder.setup_subfolder(uuid)
-        self._folder.open_folder_in_explorer(uuid)
         return UUIDString(uuid)
 
     @autosave("_save_file")
@@ -118,14 +119,14 @@ class AssetLibrary:
             Removing an asset that has archived assets depending on it will raise an AssetArchiveError.
             Archived assets cannot have their dependencies changed and must be kept for historical purposes.
         """
-        if any([self[used_by].archived for used_by in self[asset_uuid].assets_used_by]):
+        if any([self[used_by].archived for used_by in self[asset_uuid].asset_used_by]):
             return error(AssetArchiveError, "Cannot remove the asset while it has archived assets depending on it.")
 
         # Unlink any assets connected to this asset
         for used_asset in self[asset_uuid].assets_used:
             self.disconnect(asset_uuid, used_asset)
 
-        for used_by_asset in self[asset_uuid].assets_used_by:
+        for used_by_asset in self[asset_uuid].asset_used_by:
             self.disconnect(used_by_asset, asset_uuid)
 
         # Remove the folder
@@ -206,7 +207,7 @@ class AssetLibrary:
             return error(AssetArchiveError, "Archived Assets can't have elements added to their 'asset_used' set")
 
         self[parent_asset].assets_used.add(child_asset)
-        self[child_asset].assets_used_by.add(parent_asset)
+        self[child_asset].asset_used_by.add(parent_asset)
 
     @autosave("_save_file")
     def disconnect(self, parent_asset: UUIDString, child_asset: UUIDString) -> None:
@@ -234,29 +235,38 @@ class AssetLibrary:
             return error(AssetArchiveError, "Archived Assets can't have elements removed from their 'asset_used' set")
 
         self[parent_asset].assets_used.remove(child_asset)
-        self[child_asset].assets_used_by.remove(parent_asset)
+        self[child_asset].asset_used_by.remove(parent_asset)
 
     @autosave("_save_file")
-    def set_data(self, asset_id: UUIDString, asset_json: JsonString) -> None:
+    def set_data(self, asset_id: UUIDString, new_values: JsonString) -> None:
         """ Set data for an asset in the AssetLibrary.
 
             This method sets data for an asset specified by its UUID using a JSON string representation.
 
         Parameters:
+            new_values (Dict[str, Any): The Dict representing the data to be set.
             asset_id (UUIDString): The UUID of the asset to set data for.
-            asset_json (JsonString): The JSON string representing the data to be set.
 
         Raises:
             AssetArchiveError: If the asset with the given UUID is archived and cannot have its data changed.
 
         Example usage:
             library = AssetLibrary("/path/to/asset/library")
-            library.set_data("12345678-1234-5678-1234-567812345678", '{"key": "value"}')
+            library.set_data("12345678-1234-5678-1234-567812345678", {"key": 5})
         """
         if self[asset_id].archived:
             return error(AssetArchiveError, "Cannot set data for an archived asset.")
 
-        self[asset_id].from_json(asset_json, undefine=Undefined.EXCLUDE)
+        new_data = json.loads(new_values)
+        for key in "_asset_type", "assets_used", "assets_used_by", "archived":
+            if key in new_data:
+                return error(PermissionError, f"{key}, cannot be manipulated through set_data")
+
+        loaded_instance = self[asset_id].from_json(new_values)
+
+        for dataclass_field in dataclasses.fields(self[asset_id]):
+            loaded_value = getattr(loaded_instance, dataclass_field.name)
+            setattr(self[asset_id], dataclass_field.name, loaded_value)
 
     def get_data(self, asset_id: UUIDString) -> JsonString:
         """ Get data for an asset in the AssetLibrary.
@@ -273,7 +283,7 @@ class AssetLibrary:
             library = AssetLibrary("/path/to/asset/library")
             data = library.get_data("12345678-1234-5678-1234-567812345678")
         """
-        return self[asset_id].to_json()
+        return JsonString(self[asset_id].to_json())
 
     def get_by_name(self, asset_name: str) -> Set[UUIDString]:
         """ Get the UUID of an asset by its name in the AssetLibrary.

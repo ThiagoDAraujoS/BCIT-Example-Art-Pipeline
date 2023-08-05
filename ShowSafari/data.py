@@ -2,12 +2,12 @@ from . import UUIDString, TypeString
 
 from datetime import date, time
 from typing import Set, List, Dict, Type
-from dataclasses_json import dataclass_json
+from dataclasses_json import dataclass_json, Undefined
 from dataclasses import field, dataclass
 import re
 
 
-@dataclass_json
+@dataclass_json(undefined=Undefined.EXCLUDE)
 @dataclass
 class Asset:
     """ Represents an asset.
@@ -15,12 +15,12 @@ class Asset:
     Attributes:
         name (str): The name of the asset.
         assets_used (Set[str(UUID)]): Set of UUIDs representing assets used by this asset.
-        assets_used_by (Set[str(UUID)]): Set of UUIDs representing assets using this asset.
+        asset_used_by (Set[str(UUID)]): Set of UUIDs representing assets using this asset.
     """
-    name: str
-    _asset_type: TypeString
+    name: str = ""
+    _asset_type: TypeString = "Undefined"
     assets_used: Set[UUIDString] = field(default_factory=set)
-    assets_used_by: Set[UUIDString] = field(default_factory=set)
+    asset_used_by: Set[UUIDString] = field(default_factory=set)
     archived: bool = False
 
     @property
