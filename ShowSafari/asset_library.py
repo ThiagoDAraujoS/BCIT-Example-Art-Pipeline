@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-import dataclasses
-import json
-import os
-
 from .folder import Folder
 from .save_file import SaveFile, autosave
 from .data import *
 from . import UUIDString, JsonString, PathString, TypeString
 from . import AssetArchiveError, ConnectToSelfError, error
 
+import dataclasses
+import json
+import os
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, Undefined
-from typing import Dict, Any
+from dataclasses_json import dataclass_json
+from typing import Dict
 from uuid import uuid4 as generate_uuid
 
 
@@ -267,6 +266,14 @@ class AssetLibrary:
         for dataclass_field in dataclasses.fields(self[asset_id]):
             loaded_value = getattr(loaded_instance, dataclass_field.name)
             setattr(self[asset_id], dataclass_field.name, loaded_value)
+
+    def exists(self, asset_id: UUIDString) -> bool:
+        """ Return if asset exists in library
+
+        Parameters:
+            asset_id (UUIDString): Asset id to verify if exists.
+        """
+        return asset_id in self._assets.data
 
     def get_data(self, asset_id: UUIDString) -> JsonString:
         """ Get data for an asset in the AssetLibrary.

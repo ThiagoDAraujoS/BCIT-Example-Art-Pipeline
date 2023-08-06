@@ -1,8 +1,7 @@
-import inspect
-
 from .folder import Folder
 from . import PathString
 
+import inspect
 import dataclasses
 from dataclasses_json import dataclass_json
 from typing import Type, Callable

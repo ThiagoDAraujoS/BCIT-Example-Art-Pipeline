@@ -95,7 +95,7 @@ class Show:
     description: str = ""
     countries_of_origin: Set[str] = field(default_factory=set)
     third_party_services: Set[str] = field(default_factory=set)
-    shots: List[str] = field(default_factory=list)
+    shots: Set[str] = field(default_factory=set)
 
 
 ASSET_TYPES: Dict[TypeString, Type[Asset]] = {

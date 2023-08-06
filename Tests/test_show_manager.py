@@ -1,9 +1,12 @@
+from unittest import TestCase
+
 from ShowSafari import JsonString
 from ShowSafari.asset_library import AssetLibrary
 from ShowSafari.data import Show
 from ShowSafari.show_manager import ShowManager
 from test_setup import TestSetup
 import os
+
 
 class TestShowManager(TestSetup):
     def setUp(self) -> None:
@@ -13,7 +16,7 @@ class TestShowManager(TestSetup):
         self.manager = ShowManager(self.main_folder_path, self.library)
         self.folder = self.manager._folder
         self.manager.create_show(self.show_name)
-        self.manager.create_shot(self.show_name, self.shot_name)
+        self.shot_id = self.manager.create_shot(self.show_name, self.shot_name)
 
     def tearDown(self) -> None:
         self.manager._folder.delete()
@@ -66,3 +69,16 @@ class TestShowManager(TestSetup):
     def test_get_show_names(self):
         show_names = self.manager.get_show_names()
         self.assertEqual({"test_show"}, show_names, "Get show names did not return an accurate set of shows names")
+
+    def test_remove_add_shot(self):
+        self.manager.remove_shot(self.show_name, self.shot_id)
+        self.assertNotIn(self.shot_id, self.manager[self.show_name].shots,
+                         "Asset has not been removed properly from show")
+        self.manager.add_shot(self.show_name, self.shot_id)
+        self.assertIn(self.shot_id, self.manager[self.show_name].shots,
+                      "Asset has not been added properly from show")
+
+    def test_delete_shot(self):
+        self.manager.delete_shot(self.shot_id)
+        self.assertNotIn(self.shot_id, self.manager[self.show_name].shots)
+        self.assertNotIn(self.shot_id, self.library._assets.data)

@@ -1,18 +1,17 @@
 from __future__ import annotations
 
-import dataclasses
-import json
-
 from .save_file import SaveFile, autosave
 from .folder import Folder
 from .data import Show
 from .asset_library import AssetLibrary
 from . import UUIDString, JsonString, PathString, TypeString, error
 
+import json
+import dataclasses
 from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json, Undefined
+from dataclasses_json import dataclass_json
 import os.path
-from typing import Dict, Set, Callable, Any
+from typing import Dict, Set, Callable
 
 
 @dataclass_json
@@ -73,7 +72,7 @@ class ShowManager:
             - It also sets up a subfolder for the show using the show name.
 
         Example usage:
-            library.create_show("My Show")
+            manager.create_show("My Show")
         """
         if show_name in self._shows.data:
             return error(KeyError, f"Show {show_name} already presented in shows collection")
@@ -97,7 +96,7 @@ class ShowManager:
             - It also removes the associated subfolder of the show.
 
         Example usage:
-            library.delete_show("My Show")
+            manager.delete_show("My Show")
         """
         self._folder.delete_subfolder(show_name)
         self._shows.data.pop(show_name)
@@ -112,7 +111,7 @@ class ShowManager:
             show_json (str): The JSON string representing the data to be set.
 
         Example usage:
-            library.set_show_data("My Show", '{"key": "value"}')
+            manager.set_show_data("My Show", '{"key": "value"}')
         """
         new_data = json.loads(show_json)
         for key in "shots":
@@ -138,11 +137,45 @@ class ShowManager:
             UUIDString: A UUID representing the newly created shot.
 
         Example usage:
-            new_shot_uuid = library.create_shot("My Show", "New Shot")
+            new_shot_uuid = manager.create_shot("My Show", "New Shot")
         """
         uuid = self._library.create(shot_name, TypeString("Shot"))
-        self._shows.data[show_name].shots.append(uuid)
+        self._shows.data[show_name].shots.add(uuid)
         return uuid
+
+    @autosave("_save_file")
+    def delete_shot(self, shot_uuid: UUIDString) -> None:
+        """ This method removes a shot from all shows in the AssetLibrary and then deletes the shot from the library.
+
+        Parameters:
+            shot_uuid (UUIDString): The UUID of the shot to be deleted.
+        """
+        for show in self._shows.data.values():
+            show.shots.discard(shot_uuid)
+        self._library.remove(shot_uuid)
+
+    @validate_show_name
+    @autosave("_save_file")
+    def remove_shot(self, show_name: str, shot_uuid: UUIDString) -> None:
+        """This method removes a shot from a specific show.
+
+        Parameters:
+            show_name (str): The name of the show from which the shot should be removed.
+            shot_uuid (UUIDString): The UUID of the shot to be removed from the show.
+        """
+        self[show_name].shots.discard(shot_uuid)
+
+    @validate_show_name
+    @autosave("_save_file")
+    def add_shot(self, show_name: str, shot_uuid: UUIDString) -> None:
+        """This method adds a shot to a show.
+
+        Parameters:
+            show_name (str): The name of the show from which the shot should be added.
+            shot_uuid (UUIDString): The UUID of the shot to be added to the show.
+        """
+        if self._library.exists(shot_uuid):
+            self[show_name].shots.add(shot_uuid)
 
     @validate_show_name
     def get_show_data(self, show_name: str) -> JsonString:
@@ -155,7 +188,7 @@ class ShowManager:
             str: The JSON string representing the data for the specified show.
 
         Example usage:
-            data = library.get_show_data("My Show")
+            data = manager.get_show_data("My Show")
         """
         return self._shows.data[show_name].to_json()
 
@@ -170,7 +203,7 @@ class ShowManager:
             PathString | None: The path to the folder for the specified show or None if the show doesn't exist.
 
         Example usage:
-            folder_path = library.get_show_folder("My Show")
+            folder_path = manager.get_show_folder("My Show")
         """
         return self._folder.get_absolute_path(show_name)
 
@@ -185,7 +218,7 @@ class ShowManager:
             Show: The show object for the specified show name.
 
         Example usage:
-            show = library.get_show("My Show")
+            show = manager.get_show("My Show")
         """
         return self._shows.data[show_name]
 
@@ -196,6 +229,6 @@ class ShowManager:
             Set(Show): A set containing all the show names.
 
         Example usage:
-            show = library.get_show("My Show")
+            show = manager.get_show("My Show")
         """
         return set(self._shows.data.keys())
