@@ -43,19 +43,36 @@ class ShowManager:
         self._save_file.load()
 
     @staticmethod
-    def validate_show_name(func: Callable) -> Callable:
+    def _validate_show_name(func: Callable) -> Callable:
         """ This decorator checks if the first argument 'show_name' exists in the _shows dictionary
 
             Methods decorated by this decorator need to use their first argument as a show_name id
             this id will be then checked against _shows.data and the method will be terminated or
             an error will be raised if the show_name does not exist in the _shows.data
         """
+
         def inner(self, show_name: str, *args, **kwargs):
             if show_name not in self._shows.data:
                 return error(KeyError, "Invalid show name")
             result = func(self, show_name, *args, **kwargs)
             return result
+
         return inner
+
+    @_validate_show_name
+    def __getitem__(self, show_name):
+        """ Get a show object from the shows' collection.
+
+        Parameters:
+            show_name (str): The name of the show to retrieve.
+
+        Returns:
+            Show: The show object for the specified show name.
+
+        Example usage:
+            show = manager.get_show("My Show")
+        """
+        return self._shows.data[show_name]
 
     @autosave("_save_file")
     def create_show(self, show_name: str) -> None:
@@ -80,7 +97,7 @@ class ShowManager:
         self._shows.data[show_name] = Show()
         self._folder.setup_subfolder(show_name)
 
-    @validate_show_name
+    @_validate_show_name
     @autosave("_save_file")
     def delete_show(self, show_name: str) -> None:
         """ Delete a show and its associated data from the shows' collection.
@@ -101,7 +118,22 @@ class ShowManager:
         self._folder.delete_subfolder(show_name)
         self._shows.data.pop(show_name)
 
-    @validate_show_name
+    @_validate_show_name
+    def get_show_data(self, show_name: str) -> JsonString:
+        """ Get data for a show in the AssetLibrary.
+
+        Parameters:
+            show_name (str): The name of the show to retrieve data for.
+
+        Returns:
+            str: The JSON string representing the data for the specified show.
+
+        Example usage:
+            data = manager.get_show_data("My Show")
+        """
+        return self._shows.data[show_name].to_json()
+
+    @_validate_show_name
     @autosave("_save_file")
     def set_show_data(self, show_name: str, show_json: JsonString) -> None:
         """ Set data for a show in the AssetLibrary.
@@ -124,7 +156,33 @@ class ShowManager:
             loaded_value = getattr(loaded_instance, dataclass_field.name)
             setattr(self[show_name], dataclass_field.name, loaded_value)
 
-    @validate_show_name
+    @_validate_show_name
+    def get_show_folder(self, show_name: str) -> PathString | None:
+        """ Get the folder path for a show in the AssetLibrary.
+
+        Parameters:
+            show_name (str): The name of the show to get the folder path for.
+
+        Returns:
+            PathString | None: The path to the folder for the specified show or None if the show doesn't exist.
+
+        Example usage:
+            folder_path = manager.get_show_folder("My Show")
+        """
+        return self._folder.get_absolute_path(show_name)
+
+    def get_show_names(self) -> Set[str]:
+        """ Get a list of show names in the collection.
+
+        Returns:
+            Set(Show): A set containing all the show names.
+
+        Example usage:
+            show = manager.get_show("My Show")
+        """
+        return set(self._shows.data.keys())
+
+    @_validate_show_name
     @autosave("_save_file")
     def create_shot(self, show_name: str, shot_name: str) -> UUIDString:
         """ Create a new shot and add it to a show in the AssetLibrary.
@@ -152,20 +210,9 @@ class ShowManager:
         """
         for show in self._shows.data.values():
             show.shots.discard(shot_uuid)
-        self._library.remove(shot_uuid)
+        self._library.delete(shot_uuid)
 
-    @validate_show_name
-    @autosave("_save_file")
-    def remove_shot(self, show_name: str, shot_uuid: UUIDString) -> None:
-        """This method removes a shot from a specific show.
-
-        Parameters:
-            show_name (str): The name of the show from which the shot should be removed.
-            shot_uuid (UUIDString): The UUID of the shot to be removed from the show.
-        """
-        self[show_name].shots.discard(shot_uuid)
-
-    @validate_show_name
+    @_validate_show_name
     @autosave("_save_file")
     def add_shot(self, show_name: str, shot_uuid: UUIDString) -> None:
         """This method adds a shot to a show.
@@ -177,58 +224,13 @@ class ShowManager:
         if self._library.exists(shot_uuid):
             self[show_name].shots.add(shot_uuid)
 
-    @validate_show_name
-    def get_show_data(self, show_name: str) -> JsonString:
-        """ Get data for a show in the AssetLibrary.
+    @_validate_show_name
+    @autosave("_save_file")
+    def remove_shot(self, show_name: str, shot_uuid: UUIDString) -> None:
+        """This method removes a shot from a specific show.
 
         Parameters:
-            show_name (str): The name of the show to retrieve data for.
-
-        Returns:
-            str: The JSON string representing the data for the specified show.
-
-        Example usage:
-            data = manager.get_show_data("My Show")
+            show_name (str): The name of the show from which the shot should be removed.
+            shot_uuid (UUIDString): The UUID of the shot to be removed from the show.
         """
-        return self._shows.data[show_name].to_json()
-
-    @validate_show_name
-    def get_show_folder(self, show_name: str) -> PathString | None:
-        """ Get the folder path for a show in the AssetLibrary.
-
-        Parameters:
-            show_name (str): The name of the show to get the folder path for.
-
-        Returns:
-            PathString | None: The path to the folder for the specified show or None if the show doesn't exist.
-
-        Example usage:
-            folder_path = manager.get_show_folder("My Show")
-        """
-        return self._folder.get_absolute_path(show_name)
-
-    @validate_show_name
-    def __getitem__(self, show_name):
-        """ Get a show object from the shows' collection.
-
-        Parameters:
-            show_name (str): The name of the show to retrieve.
-
-        Returns:
-            Show: The show object for the specified show name.
-
-        Example usage:
-            show = manager.get_show("My Show")
-        """
-        return self._shows.data[show_name]
-
-    def get_show_names(self) -> Set[str]:
-        """ Get a list of show names in the collection.
-
-        Returns:
-            Set(Show): A set containing all the show names.
-
-        Example usage:
-            show = manager.get_show("My Show")
-        """
-        return set(self._shows.data.keys())
+        self[show_name].shots.discard(shot_uuid)

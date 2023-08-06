@@ -35,7 +35,7 @@ class TestAssetLibrary(TestSetup):
         self.assertTrue(self.folder.subfolder_exists(uuid), "Asset creation did not setup a new asset folder")
 
     def test_remove(self):
-        self.library.remove(self.a_asset_uuid)
+        self.library.delete(self.a_asset_uuid)
         self.assertNotIn(self.a_asset_uuid, self.data.data, "After remove asset has not been removed from library")
         self.assertFalse(self.folder.subfolder_exists(self.a_asset_uuid), "After remove asset folder still exists")
 

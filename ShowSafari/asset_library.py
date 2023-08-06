@@ -99,7 +99,7 @@ class AssetLibrary:
         return UUIDString(uuid)
 
     @autosave("_save_file")
-    def remove(self, asset_uuid: UUIDString) -> None:
+    def delete(self, asset_uuid: UUIDString) -> None:
         """ Remove an asset from the AssetLibrary.
 
             This method unlinks any assets connected to the target asset and then removes the asset from the AssetLibrary.
@@ -236,6 +236,23 @@ class AssetLibrary:
         self[parent_asset].assets_used.remove(child_asset)
         self[child_asset].asset_used_by.remove(parent_asset)
 
+    def get_data(self, asset_id: UUIDString) -> JsonString:
+        """ Get data for an asset in the AssetLibrary.
+
+            This method retrieves data for an asset specified by its UUID and returns it as a JSON string representation.
+
+        Parameters:
+            asset_id (UUIDString): The UUID of the asset to retrieve data for.
+
+        Returns:
+            JsonString: The JSON string representing the data for the specified asset.
+
+        Example usage:
+            library = AssetLibrary("/path/to/asset/library")
+            data = library.get_data("12345678-1234-5678-1234-567812345678")
+        """
+        return JsonString(self[asset_id].to_json())
+
     @autosave("_save_file")
     def set_data(self, asset_id: UUIDString, new_values: JsonString) -> None:
         """ Set data for an asset in the AssetLibrary.
@@ -274,23 +291,6 @@ class AssetLibrary:
             asset_id (UUIDString): Asset id to verify if exists.
         """
         return asset_id in self._assets.data
-
-    def get_data(self, asset_id: UUIDString) -> JsonString:
-        """ Get data for an asset in the AssetLibrary.
-
-            This method retrieves data for an asset specified by its UUID and returns it as a JSON string representation.
-
-        Parameters:
-            asset_id (UUIDString): The UUID of the asset to retrieve data for.
-
-        Returns:
-            JsonString: The JSON string representing the data for the specified asset.
-
-        Example usage:
-            library = AssetLibrary("/path/to/asset/library")
-            data = library.get_data("12345678-1234-5678-1234-567812345678")
-        """
-        return JsonString(self[asset_id].to_json())
 
     def get_by_name(self, asset_name: str) -> Set[UUIDString]:
         """ Get the UUID of an asset by its name in the AssetLibrary.
