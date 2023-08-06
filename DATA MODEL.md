@@ -1,4 +1,4 @@
-#  Asset Library Data Model
+# Asset Library Data Model
 
 ## Overview
 
